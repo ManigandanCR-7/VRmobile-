@@ -8,7 +8,7 @@
     <style>
       body { margin: 0; overflow: hidden; }
 
-      /* Outer Joystick Zone */
+      /* Always visible joystick zone */
       #joystick-zone {
         position: absolute;
         bottom: 40px;
@@ -22,7 +22,7 @@
         touch-action: none;
       }
 
-      /* Force the joystick knob to show */
+      /* Joystick knob style */
       .nipple {
         background: pink !important;
         border: 2px solid white !important;
@@ -34,7 +34,7 @@
     </style>
   </head>
   <body>
-    <!-- Joystick Container -->
+    <!-- Joystick Controller -->
     <div id="joystick-zone"></div>
 
     <!-- A-Frame Scene -->
@@ -57,50 +57,42 @@
     <script>
       const rig = document.querySelector("#rig");
       const camera = document.querySelector("a-camera");
-      let moveForward = 0, moveSide = 0;
+      let moveX = 0, moveZ = 0;
 
-      // Setup Joystick (static + always visible)
+      // Setup Joystick (always visible)
       const joystick = nipplejs.create({
         zone: document.getElementById('joystick-zone'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
         color: 'pink',
         size: 120,
-        restJoystick: true   // keeps joystick knob visible always
+        restJoystick: true
       });
-
-      // Force render the joystick knob immediately
-      setTimeout(() => {
-        joystick.trigger('added'); 
-      }, 100);
 
       // Joystick Move Event
       joystick.on('move', (evt, data) => {
-        const rad = data.angle.radian;
+        const angle = data.angle.radian;
         const force = data.force;
 
-        moveForward = Math.cos(rad) * force * 0.05;
-        moveSide = Math.sin(rad) * force * 0.05;
+        // Camera yaw for relative movement
+        const yaw = camera.object3D.rotation.y;
+
+        // Convert joystick movement into world direction
+        moveX = (Math.cos(angle) * Math.cos(yaw) - Math.sin(angle) * Math.sin(yaw)) * force * 0.05;
+        moveZ = (Math.cos(angle) * Math.sin(yaw) + Math.sin(angle) * Math.cos(yaw)) * force * 0.05;
       });
 
-      // Joystick Release Event
-      joystick.on('end', () => { moveForward = 0; moveSide = 0; });
+      // Stop movement when joystick released
+      joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
-      // Movement Loop
+      // Movement loop
       function tick() {
         const pos = rig.getAttribute("position");
-        const rotation = camera.object3D.rotation.y; // yaw
-
-        // Rotate joystick vector by camera yaw
-        const dx = moveSide * Math.cos(rotation) - moveForward * Math.sin(rotation);
-        const dz = moveSide * Math.sin(rotation) + moveForward * Math.cos(rotation);
-
         rig.setAttribute("position", {
-          x: pos.x + dx,
+          x: pos.x + moveX,
           y: pos.y,
-          z: pos.z - dz
+          z: pos.z - moveZ   // minus keeps forward natural
         });
-
         requestAnimationFrame(tick);
       }
       tick();
