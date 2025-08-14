@@ -8,23 +8,33 @@
     <style>
       body { margin: 0; overflow: hidden; }
 
-      /* Joystick Zone (always visible) */
+      /* Outer Joystick Zone */
       #joystick-zone {
         position: absolute;
-        bottom: 40px; /* place at bottom */
+        bottom: 40px;
         left: 50%;
         transform: translateX(-50%);
         width: 160px;
         height: 160px;
-        background: rgba(255, 255, 255, 0.3); /* semi-white background */
-        border: 3px solid pink;               /* pink border */
+        background: rgba(255, 255, 255, 0.3); /* semi-white */
+        border: 3px solid pink;
         border-radius: 50%;
         touch-action: none;
+      }
+
+      /* Force the joystick knob to show */
+      .nipple {
+        background: pink !important;
+        border: 2px solid white !important;
+      }
+      .nipple .front {
+        background: pink !important;
+        border: 2px solid white !important;
       }
     </style>
   </head>
   <body>
-    <!-- Joystick Controller -->
+    <!-- Joystick Container -->
     <div id="joystick-zone"></div>
 
     <!-- A-Frame Scene -->
@@ -49,15 +59,20 @@
       const camera = document.querySelector("a-camera");
       let moveForward = 0, moveSide = 0;
 
-      // Setup Joystick (always visible)
+      // Setup Joystick (static + always visible)
       const joystick = nipplejs.create({
         zone: document.getElementById('joystick-zone'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
         color: 'pink',
         size: 120,
-        restJoystick: true   // keeps joystick visible when not moving
+        restJoystick: true   // keeps joystick knob visible always
       });
+
+      // Force render the joystick knob immediately
+      setTimeout(() => {
+        joystick.trigger('added'); 
+      }, 100);
 
       // Joystick Move Event
       joystick.on('move', (evt, data) => {
@@ -83,7 +98,7 @@
         rig.setAttribute("position", {
           x: pos.x + dx,
           y: pos.y,
-          z: pos.z - dz   // minus so forward feels natural
+          z: pos.z - dz
         });
 
         requestAnimationFrame(tick);
