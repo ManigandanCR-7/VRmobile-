@@ -9,12 +9,11 @@
       body { margin: 0; overflow: hidden; }
       #joystick-zone {
         position: absolute;
-        bottom: 40px;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 50px;
+        left: 120px; /* shifted slightly to the right */
         width: 150px;
         height: 150px;
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.1); /* blackish background */
         border-radius: 50%;
         touch-action: none;
       }
@@ -24,7 +23,7 @@
     <div id="joystick-zone"></div>
 
     <a-scene>
-      <!-- Camera Rig -->
+      <!-- Camera Rig (for moving the player) -->
       <a-entity id="rig" position="0 1.6 0">
         <a-camera wasd-controls-enabled="false"></a-camera>
       </a-entity>
@@ -42,38 +41,38 @@
     <script>
       const rig = document.querySelector("#rig");
       let moveX = 0, moveZ = 0;
-      let velX = 0, velZ = 0; // velocity for smoothness
 
       // Setup Joystick
       const joystick = nipplejs.create({
         zone: document.getElementById('joystick-zone'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
-        color: 'black', // joystick color black
-        size: 120,
+        color: 'black', // base color
+        size: 120
+      });
+
+      // Add black outer + white middle look
+      joystick.on('added', (evt, nipple) => {
+        nipple.ui.front.style.background = "white"; // stick (inner)
+        nipple.ui.back.style.background = "black";  // base (outer)
       });
 
       joystick.on('move', (evt, data) => {
         const angle = data.angle.radian;
         const force = data.force;
-        moveX = Math.cos(angle) * force * 0.02; // reduced sensitivity
-        moveZ = Math.sin(angle) * force * 0.02;
+        moveX = Math.cos(angle) * force * 0.05;
+        moveZ = Math.sin(angle) * force * 0.05;
       });
 
       joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
-      // Movement loop with smoothing (lerp)
+      // Movement loop
       function tick() {
         const pos = rig.getAttribute("position");
-
-        // interpolate for smooth movement
-        velX += (moveX - velX) * 0.05;
-        velZ += (moveZ - velZ) * 0.05;
-
         rig.setAttribute("position", {
-          x: pos.x + velX,
+          x: pos.x + moveX,
           y: pos.y,
-          z: pos.z + velZ
+          z: pos.z + moveZ
         });
         requestAnimationFrame(tick);
       }
