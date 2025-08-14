@@ -61,7 +61,7 @@
         const angle = data.angle.radian;
         const force = data.force;
         moveX = Math.cos(angle) * force * 0.05;
-        moveZ = Math.sin(angle) * force * 0.05;
+        moveZ = -Math.sin(angle) * force * 0.05; // <-- invert Z so forward = forward
       });
 
       joystick.on('end', () => { moveX = 0; moveZ = 0; });
