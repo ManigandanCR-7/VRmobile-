@@ -9,11 +9,12 @@
       body { margin: 0; overflow: hidden; }
       #joystick-zone {
         position: absolute;
-        bottom: 50px;
-        left: 50px;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
         width: 150px;
         height: 150px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.15);
         border-radius: 50%;
         touch-action: none;
       }
@@ -23,7 +24,7 @@
     <div id="joystick-zone"></div>
 
     <a-scene>
-      <!-- Camera Rig (for moving the player) -->
+      <!-- Camera Rig -->
       <a-entity id="rig" position="0 1.6 0">
         <a-camera wasd-controls-enabled="false"></a-camera>
       </a-entity>
@@ -41,32 +42,38 @@
     <script>
       const rig = document.querySelector("#rig");
       let moveX = 0, moveZ = 0;
+      let velX = 0, velZ = 0; // velocity for smoothness
 
       // Setup Joystick
       const joystick = nipplejs.create({
         zone: document.getElementById('joystick-zone'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
-        color: 'pink',
-        size: 120
+        color: 'black', // joystick color black
+        size: 120,
       });
 
       joystick.on('move', (evt, data) => {
         const angle = data.angle.radian;
         const force = data.force;
-        moveX = Math.cos(angle) * force * 0.05;
-        moveZ = Math.sin(angle) * force * 0.05;
+        moveX = Math.cos(angle) * force * 0.02; // reduced sensitivity
+        moveZ = Math.sin(angle) * force * 0.02;
       });
 
       joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
-      // Movement loop
+      // Movement loop with smoothing (lerp)
       function tick() {
         const pos = rig.getAttribute("position");
+
+        // interpolate for smooth movement
+        velX += (moveX - velX) * 0.05;
+        velZ += (moveZ - velZ) * 0.05;
+
         rig.setAttribute("position", {
-          x: pos.x + moveX,
+          x: pos.x + velX,
           y: pos.y,
-          z: pos.z + moveZ
+          z: pos.z + velZ
         });
         requestAnimationFrame(tick);
       }
