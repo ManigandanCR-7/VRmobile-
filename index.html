@@ -2,27 +2,32 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Walkthrough with Camera Joystick</title>
+    <title>VR Walkthrough with Joystick</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
     <style>
       body { margin: 0; overflow: hidden; }
+
+      /* Joystick Zone (always visible) */
       #joystick-zone {
         position: absolute;
-        bottom: 40px; /* bottom aligned */
+        bottom: 40px; /* place at bottom */
         left: 50%;
         transform: translateX(-50%);
         width: 160px;
         height: 160px;
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.3); /* semi-white background */
+        border: 3px solid pink;               /* pink border */
         border-radius: 50%;
         touch-action: none;
       }
     </style>
   </head>
   <body>
+    <!-- Joystick Controller -->
     <div id="joystick-zone"></div>
 
+    <!-- A-Frame Scene -->
     <a-scene>
       <!-- Camera Rig -->
       <a-entity id="rig" position="0 1.6 0">
@@ -44,27 +49,29 @@
       const camera = document.querySelector("a-camera");
       let moveForward = 0, moveSide = 0;
 
-      // Setup Joystick
+      // Setup Joystick (always visible)
       const joystick = nipplejs.create({
         zone: document.getElementById('joystick-zone'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
-        color: 'pink',   // joystick knob
-        size: 140
+        color: 'pink',
+        size: 120,
+        restJoystick: true   // keeps joystick visible when not moving
       });
 
+      // Joystick Move Event
       joystick.on('move', (evt, data) => {
         const rad = data.angle.radian;
         const force = data.force;
 
-        // Convert joystick direction
         moveForward = Math.cos(rad) * force * 0.05;
         moveSide = Math.sin(rad) * force * 0.05;
       });
 
+      // Joystick Release Event
       joystick.on('end', () => { moveForward = 0; moveSide = 0; });
 
-      // Movement loop
+      // Movement Loop
       function tick() {
         const pos = rig.getAttribute("position");
         const rotation = camera.object3D.rotation.y; // yaw
