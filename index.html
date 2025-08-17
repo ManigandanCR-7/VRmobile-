@@ -40,77 +40,68 @@
         sound="src: url(beethoven-for-elise-arr-for-music-box-173061.mp3); autoplay: false; loop: true; volume: 0.7">
       </a-entity>
     </a-scene>
+    
+<script>
+  const rig = document.querySelector("#rig");
+  const camera = rig.querySelector("a-camera");
+  const music = document.querySelector("#bg-music");
 
-    <script>
-      const rig = document.querySelector("#rig");
-      const camera = rig.querySelector("a-camera");
-      const music = document.querySelector("#bg-music");
+  // ✅ Force initial spawn position (this makes sure it takes effect)
+  rig.setAttribute("position", { x: 10, y: 1.6, z: 10 });
 
-      let moveX = 0, moveZ = 0;
-      let musicPlaying = false;
+  let moveX = 0, moveZ = 0;
+  let musicPlaying = false;
 
-      // Setup Joystick
-      const joystick = nipplejs.create({
-        zone: document.getElementById('joystick-zone'),
-        mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: 'black',
-        size: 120
-      });
+  // Setup Joystick
+  const joystick = nipplejs.create({
+    zone: document.getElementById('joystick-zone'),
+    mode: 'static',
+    position: { left: '50%', top: '50%' },
+    color: 'black',
+    size: 120
+  });
 
-      joystick.on('added', (evt, nipple) => {
-        nipple.ui.front.style.background = "white"; // stick (inner)
-        nipple.ui.back.style.background = "black";  // base (outer)
-      });
+  joystick.on('added', (evt, nipple) => {
+    nipple.ui.front.style.background = "white"; // stick (inner)
+    nipple.ui.back.style.background = "black";  // base (outer)
+  });
 
-      joystick.on('move', (evt, data) => {
-        // Trigger music on first joystick movement
-        if (!musicPlaying) {
-          music.components.sound.playSound();
-          musicPlaying = true;
-        }
+  joystick.on('move', (evt, data) => {
+    if (!musicPlaying) {
+      music.components.sound.playSound();
+      musicPlaying = true;
+    }
+    const angle = data.angle.radian;
+    const force = data.force;
+    moveX = Math.cos(angle) * force * 0.05;
+    moveZ = -Math.sin(angle) * force * 0.05;
+  });
 
-        const angle = data.angle.radian;
-        const force = data.force;
-        moveX = Math.cos(angle) * force * 0.05;
-        moveZ = -Math.sin(angle) * force * 0.05; // forward = forward
-      });
+  joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
-      joystick.on('end', () => { moveX = 0; moveZ = 0; });
+  const minX = -5, maxX = 5;
+  const minZ = -5, maxZ = 5;
 
-      // Define rigid boundaries (adjust as needed)
-      const minX = -5, maxX = 5;
-      const minZ = -5, maxZ = 5;
+  function tick() {
+    const pos = rig.getAttribute("position");
 
-      // Movement loop
-      function tick() {
-        const pos = rig.getAttribute("position");
+    const direction = new THREE.Vector3();
+    camera.object3D.getWorldDirection(direction);
 
-        // Get camera facing direction
-        const direction = new THREE.Vector3();
-        camera.object3D.getWorldDirection(direction);
+    const dx = direction.x * moveZ + direction.z * moveX;
+    const dz = direction.z * moveZ - direction.x * moveX;
 
-        // Apply joystick relative to camera
-        const dx = direction.x * moveZ + direction.z * moveX;
-        const dz = direction.z * moveZ - direction.x * moveX;
+    let newX = pos.x + dx;
+    let newZ = pos.z + dz;
 
-        // New tentative position
-        let newX = pos.x + dx;
-        let newZ = pos.z + dz;
+    newX = Math.max(minX, Math.min(maxX, newX));
+    newZ = Math.max(minZ, Math.min(maxZ, newZ));
 
-        // Clamp inside rigid bounds
-        newX = Math.max(minX, Math.min(maxX, newX));
-        newZ = Math.max(minZ, Math.min(maxZ, newZ));
+    rig.setAttribute("position", { x: newX, y: pos.y, z: newZ });
 
-        rig.setAttribute("position", {
-          x: newX,
-          y: pos.y,
-          z: newZ
-        });
-
-        requestAnimationFrame(tick);
-      }
-      tick();
-    </script>
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
   </body>
 </html>
