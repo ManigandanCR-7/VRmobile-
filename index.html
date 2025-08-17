@@ -80,7 +80,7 @@
   joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
   const minX = -5, maxX = 5;
-  const minZ = -5, maxZ = 5;
+  const minZ = -0.5, maxZ = 9;
 
   function tick() {
     const pos = rig.getAttribute("position");
