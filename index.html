@@ -35,20 +35,19 @@
         scale="1 1 1">
       </a-entity>
 
-      <!-- Background Music (autoplay + loop) -->
-      <a-sound 
-        src="url(beethoven-for-elise-arr-for-music-box-173061.mp3)" 
-        autoplay="true" 
-        loop="true" 
-        volume="0.7">
-      </a-sound>
+      <!-- Background Music (not autoplay) -->
+      <a-entity id="bg-music" 
+        sound="src: url(beethoven-for-elise-arr-for-music-box-173061.mp3); autoplay: false; loop: true; volume: 0.7">
+      </a-entity>
     </a-scene>
 
     <script>
       const rig = document.querySelector("#rig");
       const camera = rig.querySelector("a-camera");
+      const music = document.querySelector("#bg-music");
 
       let moveX = 0, moveZ = 0;
+      let musicPlaying = false;
 
       // Setup Joystick
       const joystick = nipplejs.create({
@@ -65,6 +64,12 @@
       });
 
       joystick.on('move', (evt, data) => {
+        // Trigger music on first joystick movement
+        if (!musicPlaying) {
+          music.components.sound.playSound();
+          musicPlaying = true;
+        }
+
         const angle = data.angle.radian;
         const force = data.force;
         moveX = Math.cos(angle) * force * 0.05;
