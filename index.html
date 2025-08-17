@@ -37,44 +37,57 @@
     </a-scene>
 
     <script>
-      const rig = document.querySelector("#rig");
-      let moveX = 0, moveZ = 0;
+  const rig = document.querySelector("#rig");
+  const camera = rig.querySelector("a-camera"); // get camera
+  let moveX = 0, moveZ = 0;
 
-      // Setup Joystick
-      const joystick = nipplejs.create({
-        zone: document.getElementById('joystick-zone'),
-        mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: 'black', // base color
-        size: 120
-      });
+  // Setup Joystick
+  const joystick = nipplejs.create({
+    zone: document.getElementById('joystick-zone'),
+    mode: 'static',
+    position: { left: '50%', top: '50%' },
+    color: 'black', // base color
+    size: 120
+  });
 
-      // Add black outer + white middle look
-      joystick.on('added', (evt, nipple) => {
-        nipple.ui.front.style.background = "white"; // stick (inner)
-        nipple.ui.back.style.background = "black";  // base (outer)
-      });
+  // Add black outer + white middle look
+  joystick.on('added', (evt, nipple) => {
+    nipple.ui.front.style.background = "white"; // stick (inner)
+    nipple.ui.back.style.background = "black";  // base (outer)
+  });
 
-      joystick.on('move', (evt, data) => {
-        const angle = data.angle.radian;
-        const force = data.force;
-        moveX = Math.cos(angle) * force * 0.05;
-        moveZ = -Math.sin(angle) * force * 0.05; // forward = forward
-      });
+  joystick.on('move', (evt, data) => {
+    const angle = data.angle.radian;
+    const force = data.force;
 
-      joystick.on('end', () => { moveX = 0; moveZ = 0; });
+    // Save joystick polar values
+    moveX = Math.cos(angle) * force * 0.05;
+    moveZ = -Math.sin(angle) * force * 0.05;
+  });
 
-      // Movement loop
-      function tick() {
-        const pos = rig.getAttribute("position");
-        rig.setAttribute("position", {
-          x: pos.x + moveX,
-          y: pos.y,
-          z: pos.z + moveZ
-        });
-        requestAnimationFrame(tick);
-      }
-      tick();
-    </script>
+  joystick.on('end', () => { moveX = 0; moveZ = 0; });
+
+  // Movement loop
+  function tick() {
+    const pos = rig.getAttribute("position");
+
+    // Get forward direction from camera
+    const direction = new THREE.Vector3();
+    camera.object3D.getWorldDirection(direction);
+
+    // Apply joystick relative to camera
+    const dx = direction.x * moveZ + direction.z * moveX;
+    const dz = direction.z * moveZ - direction.x * moveX;
+
+    rig.setAttribute("position", {
+      x: pos.x + dx,
+      y: pos.y,
+      z: pos.z + dz
+    });
+
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
   </body>
 </html>
