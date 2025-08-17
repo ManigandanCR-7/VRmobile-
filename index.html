@@ -47,7 +47,7 @@
   const music = document.querySelector("#bg-music");
 
   // ✅ Force initial spawn position (this makes sure it takes effect)
-  rig.setAttribute("position", { x: 10, y: 1.6, z: 10 });
+  rig.setAttribute("position", { x: 10, y: 1.6, z: -10 });
 
   let moveX = 0, moveZ = 0;
   let musicPlaying = false;
@@ -80,7 +80,7 @@
   joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
   const minX = -5, maxX = 5;
-  const minZ = -0.5, maxZ = 9;
+  const minZ = -9, maxZ = 0.5;
 
   function tick() {
     const pos = rig.getAttribute("position");
