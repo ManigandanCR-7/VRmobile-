@@ -103,5 +103,37 @@
   }
   tick();
 </script>
+    <script>
+// Disable right-click context menu
+document.addEventListener("contextmenu", function(e) {
+  e.preventDefault();
+}, false);
+
+// Disable common DevTools shortcuts
+document.onkeydown = function(e) {
+  if (e.keyCode == 123) { // F12
+    return false;
+  }
+  if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) {
+    return false;
+  }
+  if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0))) {
+    return false;
+  }
+};
+
+// Detect if DevTools is open (basic check)
+(function() {
+  const element = new Image();
+  Object.defineProperty(element, 'id', {
+    get: function() {
+      alert("Developer Tools is disabled on this page.");
+      window.location.reload(); // optional: reload or redirect
+    }
+  });
+  console.log(element);
+})();
+</script>
+
   </body>
 </html>
