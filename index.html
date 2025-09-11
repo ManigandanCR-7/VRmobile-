@@ -7,7 +7,7 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
     <style>
-      body { margin: 0; overflow: hidden; }
+      body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
 
       /* Overlay styles */
       #overlay {
@@ -22,7 +22,6 @@
         align-items: center;
         z-index: 9999;
         text-align: center;
-        font-family: Arial, sans-serif;
       }
       #overlay h1 {
         font-size: 24px;
@@ -60,8 +59,10 @@
       <button id="install-btn">Install App</button>
     </div>
 
+    <!-- Joystick -->
     <div id="joystick-zone"></div>
 
+    <!-- A-Frame Scene -->
     <a-scene>
       <!-- Camera Rig -->
       <a-entity id="rig" position="10 1.6 -14">
@@ -81,8 +82,9 @@
       </a-entity>
     </a-scene>
 
+    <!-- PWA + Overlay Script -->
     <script>
-      // ✅ Register Service Worker
+      // Register service worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
@@ -91,10 +93,15 @@
         });
       }
 
-      // ✅ PWA Install Handling
+      // Overlay + install handling
       let deferredPrompt;
       const installBtn = document.getElementById("install-btn");
       const overlay = document.getElementById("overlay");
+
+      function hideOverlayAndRemember() {
+        overlay.style.display = "none";
+        try { localStorage.setItem('pwa_installed', 'true'); } catch (e) {}
+      }
 
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -102,24 +109,38 @@
         console.log("📲 PWA install available");
       });
 
-      installBtn.addEventListener("click", () => {
+      installBtn.addEventListener("click", async () => {
         if (deferredPrompt) {
           deferredPrompt.prompt();
-          deferredPrompt.userChoice.then((choice) => {
-            if (choice.outcome === "accepted") {
-              console.log("✅ User installed app");
-              overlay.style.display = "none"; // hide overlay
-            } else {
-              console.log("❌ User dismissed install");
-            }
-            deferredPrompt = null;
-          });
+          const choice = await deferredPrompt.userChoice;
+          if (choice.outcome === "accepted") {
+            console.log("✅ User installed app");
+            hideOverlayAndRemember();
+          } else {
+            console.log("❌ User dismissed install");
+          }
+          deferredPrompt = null;
         } else {
-          alert("App cannot be installed (not supported).");
+          alert("If you see an option in your browser menu like 'Install app' or 'Add to Home screen', use that.");
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        console.log('📥 PWA installed');
+        hideOverlayAndRemember();
+      });
+
+      window.addEventListener('load', () => {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                           || window.navigator.standalone === true; // iOS
+        const remembered = localStorage.getItem('pwa_installed') === 'true';
+        if (isStandalone || remembered) {
+          hideOverlayAndRemember();
         }
       });
     </script>
 
+    <!-- Joystick + Movement Script -->
     <script>
       const rig = document.querySelector("#rig");
       const camera = rig.querySelector("a-camera");
