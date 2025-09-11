@@ -1,6 +1,6 @@
 {
-    "name": "Home VR tour",
-    "short_name": " 3D on mobile & desktop ",
+    "name": "Mobile VR home",
+    "short_name": " 3D home tour",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#000000",
@@ -18,5 +18,6 @@
       }
     ]
   }
+
 
 
