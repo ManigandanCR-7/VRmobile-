@@ -178,18 +178,19 @@
       let moveX = 0, moveZ = 0;
       let musicPlaying = false;
 
-      const joystick = nipplejs.create({
-        zone: document.getElementById('joystick-zone'),
-        mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: 'black',
-        size: 120
-      });
+     const joystick = nipplejs.create({
+       zone: document.getElementById('joystick-zone'),
+       mode: 'static',
+       position: { left: '50%', top: '50%' },
+       color: '#d9d9d9', // soft grey base
+       size: 120
+     });
 
-      joystick.on('added', (evt, nipple) => {
-        nipple.ui.front.style.background = "white";
-        nipple.ui.back.style.background = "black";
-      });
+       joystick.on('added', (evt, nipple) => {
+       nipple.ui.front.style.background = "#f5f5f5"; // lighter white-grey for controller thumb
+       nipple.ui.back.style.background = "#d9d9d9";  // greyish base
+    });
+
 
       joystick.on('move', (evt, data) => {
         if (!musicPlaying) {
