@@ -14,19 +14,36 @@
     VR Walkthrough + 3D YouTube Screen
   </title>
 
-  <!-- A-FRAME -->
+
+  <!-- =====================================================
+       A-FRAME
+  ====================================================== -->
+
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 
-  <!-- NIPPLEJS -->
+
+  <!-- =====================================================
+       NIPPLEJS
+  ====================================================== -->
+
   <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
 
 
   <style>
 
+
+    /* =====================================================
+       BODY
+    ===================================================== */
+
     body {
+
       margin: 0;
+
       overflow: hidden;
+
       font-family: Arial, sans-serif;
+
     }
 
 
@@ -184,7 +201,7 @@
 
       color: white;
 
-      font-family: Arial,sans-serif;
+      font-family: Arial, sans-serif;
 
       z-index: 99999;
 
@@ -214,15 +231,107 @@
 
 
     /* =====================================================
-       DESKTOP INTERACTION PANEL
+       3D YOUTUBE DOM LAYER
 
-       This is ONLY used when interacting with the
-       YouTube player on a normal browser.
+       IMPORTANT:
 
-       It does NOT define the 3D TV position.
+       This is NOT the old bottom popup.
+
+       JavaScript dynamically positions this element
+       over the physical 3D TV screen.
     ===================================================== */
 
-    #youtube-interaction {
+    #youtube-3d-layer {
+
+      position: fixed;
+
+      display: none;
+
+      background: #000;
+
+      overflow: hidden;
+
+      z-index: 5000;
+
+      pointer-events: auto;
+
+      transform-origin: center center;
+
+      border-radius: 3px;
+
+      box-shadow:
+        0 0 12px rgba(0,0,0,0.9);
+
+    }
+
+
+    #youtube-3d-layer iframe {
+
+      display: block;
+
+      width: 100%;
+
+      height: 100%;
+
+      border: none;
+
+    }
+
+
+    /* =====================================================
+       CLOSE BUTTON
+    ===================================================== */
+
+    #youtube-layer-close {
+
+      position: absolute;
+
+      right: 6px;
+
+      top: 6px;
+
+      width: 28px;
+
+      height: 28px;
+
+      border: none;
+
+      border-radius: 50%;
+
+      background: rgba(0,0,0,0.8);
+
+      color: white;
+
+      font-size: 18px;
+
+      line-height: 28px;
+
+      text-align: center;
+
+      cursor: pointer;
+
+      z-index: 20;
+
+      opacity: 0.8;
+
+    }
+
+
+    #youtube-layer-close:hover {
+
+      opacity: 1;
+
+    }
+
+
+    /* =====================================================
+       TV OPEN BUTTON
+
+       Small DOM button that appears when the user
+       approaches/clicks the TV.
+    ===================================================== */
+
+    #youtube-open-message {
 
       position: fixed;
 
@@ -232,60 +341,21 @@
 
       transform: translateX(-50%);
 
-      width: 520px;
-
-      height: 293px;
-
       display: none;
 
       z-index: 7000;
 
-      background: #000;
-
-      border: 8px solid #111;
-
-      border-radius: 12px;
-
-      box-shadow:
-        0 0 25px rgba(0,0,0,0.9);
-
-    }
-
-
-    #youtube-interaction iframe {
-
-      width: 100%;
-      height: 100%;
-
-      border: none;
-
-    }
-
-
-    #youtube-close {
-
-      position: absolute;
-
-      right: -15px;
-
-      top: -15px;
-
-      width: 30px;
-      height: 30px;
-
-      border-radius: 50%;
-
-      border: none;
-
-      background: #111;
+      background: rgba(0,0,0,0.8);
 
       color: white;
 
-      font-size: 18px;
+      padding: 10px 18px;
 
-      cursor: pointer;
+      border-radius: 20px;
 
-      z-index: 10;
+      font-size: 14px;
+
+      pointer-events: none;
 
     }
 
@@ -296,14 +366,6 @@
 
     @media(max-width:800px) {
 
-      #youtube-interaction {
-
-        width: 90vw;
-
-        height: calc(90vw * 0.5625);
-
-      }
-
       #joystick-zone {
 
         left: 40px;
@@ -312,7 +374,21 @@
 
       }
 
+
+      #youtube-layer-close {
+
+        width: 24px;
+
+        height: 24px;
+
+        line-height: 24px;
+
+        font-size: 15px;
+
+      }
+
     }
+
 
   </style>
 
@@ -339,6 +415,7 @@
   </div>
 
 
+
   <!-- ===================================================
        JOYSTICK
   =================================================== -->
@@ -346,26 +423,28 @@
   <div id="joystick-zone"></div>
 
 
+
   <!-- ===================================================
-       DESKTOP YOUTUBE INTERACTION
+       3D YOUTUBE INTERACTIVE LAYER
 
-       This is NOT the 3D TV.
-
-       The actual TV is inside <a-scene>.
+       This element is dynamically positioned by
+       JavaScript over the 3D TV screen.
   =================================================== -->
 
-  <div id="youtube-interaction">
+  <div id="youtube-3d-layer">
 
-    <button id="youtube-close">
+    <button id="youtube-layer-close">
       ×
     </button>
 
+
     <iframe
+
       id="youtube-frame"
 
       src="https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=0&controls=1&rel=0"
 
-      title="YouTube Live"
+      title="YouTube Embedded Player"
 
       allow="
         autoplay;
@@ -376,7 +455,20 @@
       "
 
       allowfullscreen>
+
     </iframe>
+
+  </div>
+
+
+
+  <!-- ===================================================
+       SMALL INSTRUCTION
+  =================================================== -->
+
+  <div id="youtube-open-message">
+
+    Click the TV screen to interact
 
   </div>
 
@@ -394,10 +486,15 @@
     ================================================= -->
 
     <a-entity
+
       id="rig"
+
       position="10 1.6 -14">
 
       <a-camera
+
+        id="camera"
+
         wasd-controls-enabled="false">
 
       </a-camera>
@@ -407,7 +504,7 @@
 
 
     <!-- =================================================
-         YOUR EXISTING GLTF HOUSE
+         EXISTING GLTF HOUSE
     ================================================= -->
 
     <a-entity
@@ -443,36 +540,22 @@
 
     <!-- =================================================
          =================================================
-              3D YOUTUBE TV
+                    SMALL 3D YOUTUBE TV
          =================================================
-         
-         THIS IS THE IMPORTANT PART.
-
-         This entity is INSIDE the A-FRAME WORLD.
-
-         It does NOT use position:fixed.
-
-         It does NOT follow the camera.
-
-         Its position is:
-
-             X = 0
-             Y = 2.4
-             Z = -4
-
-         Change these values to place the TV
-         anywhere inside your house.
     ================================================= -->
 
     <a-entity
+
       id="youtube-tv"
+
       position="0 2.4 -4"
+
       rotation="0 0 0">
 
 
 
       <!-- ===============================================
-           OUTER BLACK TV FRAME
+           SMALLER OUTER TV FRAME
       =============================================== -->
 
       <a-box
@@ -481,11 +564,11 @@
 
         position="0 0 0"
 
-        width="4.8"
+        width="3.6"
 
-        height="2.9"
+        height="2.15"
 
-        depth="0.25"
+        depth="0.20"
 
         color="#050505"
 
@@ -506,11 +589,11 @@
 
         id="tv-screen"
 
-        position="0 0 0.14"
+        position="0 0 0.115"
 
-        width="4.35"
+        width="3.30"
 
-        height="2.45"
+        height="1.86"
 
         color="#111111"
 
@@ -529,11 +612,11 @@
 
       <a-plane
 
-        position="0 0 0.13"
+        position="0 0 0.105"
 
-        width="4.45"
+        width="3.38"
 
-        height="2.55"
+        height="1.94"
 
         color="#000000"
 
@@ -548,18 +631,18 @@
 
 
       <!-- ===============================================
-           TV TOP LABEL
+           TOP LABEL
       =============================================== -->
 
       <a-text
 
         value="YOUTUBE LIVE"
 
-        position="0 1.72 0.14"
+        position="0 1.25 0.12"
 
         align="center"
 
-        width="4"
+        width="3"
 
         color="#ffffff"
 
@@ -570,14 +653,14 @@
 
 
       <!-- ===============================================
-           SMALL RED LIVE INDICATOR
+           RED LIVE INDICATOR
       =============================================== -->
 
       <a-sphere
 
-        position="-1.65 1.72 0.15"
+        position="-1.12 1.25 0.13"
 
-        radius="0.055"
+        radius="0.045"
 
         color="#ff0000">
 
@@ -591,13 +674,13 @@
 
       <a-box
 
-        position="0 -1.48 0"
+        position="0 -1.10 0"
 
-        width="4.9"
+        width="3.7"
 
-        height="0.12"
+        height="0.10"
 
-        depth="0.3"
+        depth="0.24"
 
         color="#090909">
 
@@ -611,13 +694,13 @@
 
       <a-box
 
-        position="-1.7 -1.65 0"
+        position="-1.25 -1.30 0"
 
-        width="0.15"
+        width="0.13"
 
-        height="0.35"
+        height="0.30"
 
-        depth="0.25"
+        depth="0.22"
 
         color="#050505">
 
@@ -631,13 +714,13 @@
 
       <a-box
 
-        position="1.7 -1.65 0"
+        position="1.25 -1.30 0"
 
-        width="0.15"
+        width="0.13"
 
-        height="0.35"
+        height="0.30"
 
-        depth="0.25"
+        depth="0.22"
 
         color="#050505">
 
@@ -646,21 +729,18 @@
 
 
       <!-- ===============================================
-           INVISIBLE INTERACTION AREA
-
-           Looking/clicking this can open the
-           YouTube interaction player on desktop.
+           INTERACTION AREA
       =============================================== -->
 
       <a-plane
 
         id="tv-interaction"
 
-        position="0 0 0.22"
+        position="0 0 0.17"
 
-        width="4.35"
+        width="3.30"
 
-        height="2.45"
+        height="1.86"
 
         material="
           transparent: true;
@@ -677,7 +757,7 @@
 
 
     <!-- =================================================
-         LIGHT AROUND TV
+         TV LIGHT
     ================================================= -->
 
     <a-entity
@@ -746,6 +826,7 @@
     }
 
 
+
     /* =================================================
        EXISTING REFERENCES
     ================================================= */
@@ -755,15 +836,18 @@
         "install-btn"
       );
 
+
     const overlay =
       document.getElementById(
         "overlay"
       );
 
+
     const loading =
       document.getElementById(
         "loading"
       );
+
 
     const countdownEl =
       document.getElementById(
@@ -782,13 +866,18 @@
     function startLoadingScreen() {
 
       if (!loading || !countdownEl) {
+
         return;
+
       }
+
 
       loading.style.display =
         "flex";
 
+
       let count = 5;
+
 
       countdownEl.textContent =
         count;
@@ -800,6 +889,7 @@
 
             count--;
 
+
             countdownEl.textContent =
               count;
 
@@ -809,6 +899,7 @@
               clearInterval(
                 interval
               );
+
 
               loading.style.display =
                 "none";
@@ -886,6 +977,7 @@
 
             deferredPrompt.prompt();
 
+
             const choice =
               await deferredPrompt
                 .userChoice;
@@ -899,6 +991,7 @@
               console.log(
                 "✅ User installed app"
               );
+
 
               hideOverlayAndRemember();
 
@@ -944,6 +1037,7 @@
           '📥 PWA installed'
         );
 
+
         hideOverlayAndRemember();
 
       }
@@ -963,7 +1057,9 @@
           window.matchMedia(
             '(display-mode: standalone)'
           ).matches
+
           ||
+
           window.navigator.standalone === true;
 
 
@@ -984,6 +1080,7 @@
 
       }
     );
+
 
   </script>
 
@@ -1113,10 +1210,18 @@
 
         if (!musicPlaying) {
 
-          music.components.sound
-            .playSound();
+          if (
+            music &&
+            music.components &&
+            music.components.sound
+          ) {
 
-          musicPlaying = true;
+            music.components.sound
+              .playSound();
+
+            musicPlaying = true;
+
+          }
 
         }
 
@@ -1262,6 +1367,7 @@
 
     tick();
 
+
   </script>
 
 
@@ -1338,15 +1444,22 @@
       }
     );
 
+
   </script>
 
 
 
   <!-- ===================================================
-       3D TV INTERACTION
+       3D TV + INTERACTIVE YOUTUBE
   =================================================== -->
 
   <script>
+
+
+    const tv =
+      document.getElementById(
+        "youtube-tv"
+      );
 
 
     const tvInteraction =
@@ -1355,46 +1468,454 @@
       );
 
 
-    const youtubePanel =
+    const youtubeLayer =
       document.getElementById(
-        "youtube-interaction"
+        "youtube-3d-layer"
+      );
+
+
+    const youtubeFrame =
+      document.getElementById(
+        "youtube-frame"
       );
 
 
     const youtubeClose =
       document.getElementById(
-        "youtube-close"
+        "youtube-layer-close"
       );
 
 
+    const openMessage =
+      document.getElementById(
+        "youtube-open-message"
+      );
+
+
+
     /* =================================================
-       CLICK TV
+       SCREEN SIZE
+
+       Matches the A-Frame TV screen:
+
+       width  = 3.30
+       height = 1.86
+    ================================================= */
+
+    const screenWidth =
+      3.30;
+
+
+    const screenHeight =
+      1.86;
+
+
+
+    /* =================================================
+       SHOW YOUTUBE
+    ================================================= */
+
+    function showYouTubeLayer() {
+
+      youtubeLayer.style.display =
+        "block";
+
+
+      openMessage.style.display =
+        "none";
+
+
+      updateYouTubeLayer();
+
+    }
+
+
+
+    /* =================================================
+       HIDE YOUTUBE
+    ================================================= */
+
+    function hideYouTubeLayer() {
+
+      youtubeLayer.style.display =
+        "none";
+
+    }
+
+
+
+    /* =================================================
+       CLICK THE 3D TV
     ================================================= */
 
     tvInteraction.addEventListener(
       "click",
       () => {
 
-        youtubePanel.style.display =
-          "block";
+        showYouTubeLayer();
 
       }
     );
 
 
+
     /* =================================================
-       CLOSE YOUTUBE
+       CLOSE
     ================================================= */
 
     youtubeClose.addEventListener(
       "click",
-      () => {
+      event => {
 
-        youtubePanel.style.display =
-          "none";
+        event.stopPropagation();
+
+        hideYouTubeLayer();
 
       }
     );
+
+
+
+    /* =================================================
+       UPDATE 3D YOUTUBE POSITION
+       
+       This converts the 3D TV screen position
+       into a browser-screen position.
+    ================================================= */
+
+    function updateYouTubeLayer() {
+
+
+      if (
+        youtubeLayer.style.display ===
+        "none"
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !tv ||
+        !tv.object3D ||
+        !camera ||
+        !camera.object3D
+      ) {
+
+        return;
+
+      }
+
+
+      const renderer =
+        document.querySelector(
+          "a-scene"
+        ).renderer;
+
+
+      if (!renderer) {
+
+        requestAnimationFrame(
+          updateYouTubeLayer
+        );
+
+        return;
+
+      }
+
+
+      const canvas =
+        renderer.domElement;
+
+
+      const canvasRect =
+        canvas.getBoundingClientRect();
+
+
+
+      /* ================================================
+         WORLD CENTER OF SCREEN
+      ================================================= */
+
+      const center =
+        new THREE.Vector3(
+          0,
+          0,
+          0.125
+        );
+
+
+      tv.object3D.updateWorldMatrix(
+        true,
+        false
+      );
+
+
+      center.applyMatrix4(
+        tv.object3D.matrixWorld
+      );
+
+
+      center.project(
+        camera.object3D
+      );
+
+
+      const centerX =
+        canvasRect.left
+        +
+        (center.x + 1)
+        *
+        canvasRect.width
+        /
+        2;
+
+
+      const centerY =
+        canvasRect.top
+        +
+        (1 - center.y)
+        *
+        canvasRect.height
+        /
+        2;
+
+
+
+      /* ================================================
+         CALCULATE SCREEN WIDTH
+      ================================================= */
+
+      const leftPoint =
+        new THREE.Vector3(
+          -screenWidth / 2,
+          0,
+          0.125
+        );
+
+
+      const rightPoint =
+        new THREE.Vector3(
+          screenWidth / 2,
+          0,
+          0.125
+        );
+
+
+      leftPoint.applyMatrix4(
+        tv.object3D.matrixWorld
+      );
+
+
+      rightPoint.applyMatrix4(
+        tv.object3D.matrixWorld
+      );
+
+
+      leftPoint.project(
+        camera.object3D
+      );
+
+
+      rightPoint.project(
+        camera.object3D
+      );
+
+
+      const leftX =
+        canvasRect.left
+        +
+        (leftPoint.x + 1)
+        *
+        canvasRect.width
+        /
+        2;
+
+
+      const rightX =
+        canvasRect.left
+        +
+        (rightPoint.x + 1)
+        *
+        canvasRect.width
+        /
+        2;
+
+
+      let screenPixelWidth =
+        Math.abs(
+          rightX - leftX
+        );
+
+
+
+      /* ================================================
+         CALCULATE SCREEN HEIGHT
+      ================================================= */
+
+      const topPoint =
+        new THREE.Vector3(
+          0,
+          screenHeight / 2,
+          0.125
+        );
+
+
+      const bottomPoint =
+        new THREE.Vector3(
+          0,
+          -screenHeight / 2,
+          0.125
+        );
+
+
+      topPoint.applyMatrix4(
+        tv.object3D.matrixWorld
+      );
+
+
+      bottomPoint.applyMatrix4(
+        tv.object3D.matrixWorld
+      );
+
+
+      topPoint.project(
+        camera.object3D
+      );
+
+
+      bottomPoint.project(
+        camera.object3D
+      );
+
+
+      const topY =
+        canvasRect.top
+        +
+        (1 - topPoint.y)
+        *
+        canvasRect.height
+        /
+        2;
+
+
+      const bottomY =
+        canvasRect.top
+        +
+        (1 - bottomPoint.y)
+        *
+        canvasRect.height
+        /
+        2;
+
+
+      let screenPixelHeight =
+        Math.abs(
+          bottomY - topY
+        );
+
+
+
+      /* ================================================
+         MINIMUM SIZE PROTECTION
+      ================================================= */
+
+      screenPixelWidth =
+        Math.max(
+          screenPixelWidth,
+          10
+        );
+
+
+      screenPixelHeight =
+        Math.max(
+          screenPixelHeight,
+          6
+        );
+
+
+
+      /* ================================================
+         APPLY POSITION
+      ================================================= */
+
+      youtubeLayer.style.width =
+        screenPixelWidth + "px";
+
+
+      youtubeLayer.style.height =
+        screenPixelHeight + "px";
+
+
+      youtubeLayer.style.left =
+        (
+          centerX
+          -
+          screenPixelWidth / 2
+        ) + "px";
+
+
+      youtubeLayer.style.top =
+        (
+          centerY
+          -
+          screenPixelHeight / 2
+        ) + "px";
+
+
+
+      /* ================================================
+         CONTINUE TRACKING
+      ================================================= */
+
+      requestAnimationFrame(
+        updateYouTubeLayer
+      );
+
+    }
+
+
+
+    /* =================================================
+       START POSITION TRACKING
+    ================================================= */
+
+    function startYouTubeTracking() {
+
+      if (
+        youtubeLayer.style.display !==
+        "none"
+      ) {
+
+        updateYouTubeLayer();
+
+      }
+
+    }
+
+
+
+    /* =================================================
+       WINDOW RESIZE
+    ================================================= */
+
+    window.addEventListener(
+      "resize",
+      () => {
+
+        if (
+          youtubeLayer.style.display !==
+          "none"
+        ) {
+
+          updateYouTubeLayer();
+
+        }
+
+      }
+    );
+
 
   </script>
 
@@ -1572,6 +2093,7 @@
 
 
     })();
+
 
   </script>
 
