@@ -2,339 +2,1283 @@
 <html>
   <head>
     <link rel="manifest" href="/manifest.json" />
-    <meta charset="utf-8" />
-    <title>VR Walkthrough with Joystick + GLB Model + Music</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
-    <style>
-      body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
 
-      /* Overlay styles */
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>VR Walkthrough with Joystick + GLB Model + YouTube</title>
+
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+    <!-- NippleJS -->
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+
+    <style>
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+
+      /* ================================================= */
+      /* Overlay */
+      /* ================================================= */
+
       #overlay {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(255, 255, 255, 0.3); 
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+
+        background: rgba(255, 255, 255, 0.3);
+
         color: white;
+
         display: flex;
         flex-direction: column;
+
         justify-content: center;
         align-items: center;
+
         z-index: 9999;
+
         text-align: center;
       }
+
       #overlay h1 {
         font-size: 24px;
         margin-bottom: 20px;
       }
+
       #install-btn {
         background: #00cc66;
         color: white;
+
         padding: 12px 24px;
+
         border: none;
         border-radius: 8px;
+
         cursor: pointer;
+
         font-size: 18px;
       }
+
       #install-btn:hover {
         background: #00994d;
       }
 
+
+      /* ================================================= */
+      /* Joystick */
+      /* ================================================= */
+
       #joystick-zone {
         position: absolute;
+
         bottom: 70px;
         left: 130px;
+
         width: 150px;
         height: 150px;
+
         background: rgba(0, 0, 0, 0.1);
+
         border-radius: 50%;
+
         touch-action: none;
-      } 
+
+        z-index: 6000;
+      }
+
+
+      /* ================================================= */
+      /* Loading */
+      /* ================================================= */
+
       #loading {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
         background: rgba(0, 0, 0, 0.95);
+
         display: flex;
+
         justify-content: center;
         align-items: center;
+
         z-index: 9998;
+
         color: white;
+
         font-size: 48px;
+
         font-weight: bold;
+
         flex-direction: column;
       }
 
-      /* Intro Countdown Overlay */
+
+      /* ================================================= */
+      /* Intro Countdown */
+      /* ================================================= */
+
       #intro-overlay {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
         background: rgba(0, 0, 0, 0.7);
+
         backdrop-filter: blur(8px);
+
         display: flex;
+
         flex-direction: column;
+
         justify-content: center;
         align-items: center;
+
         color: white;
-        font-family: 'Arial', sans-serif;
+
+        font-family: Arial, sans-serif;
+
         z-index: 99999;
+
         transition: opacity 1s ease-out;
       }
+
       #countdown-text {
         font-size: 72px;
+
         font-weight: bold;
+
         margin-bottom: 20px;
       }
+
       #intro-overlay p {
         font-size: 20px;
+
         opacity: 0.8;
       }
-    </style>
-  </head>
-  <body>
-    <!-- Countdown Intro Overlay -->
-    <div id="intro-overlay">
-      <div id="countdown-text">10</div>
-      <p>Entering Virtual Property...</p>
-    </div>
 
-    <!-- Joystick -->
-    <div id="joystick-zone"></div>
 
-    <!-- A-Frame Scene -->
-    <a-scene>
-      <!-- Camera Rig -->
-      <a-entity id="rig" position="10 1.6 -14">
-        <a-camera wasd-controls-enabled="false"></a-camera>
-      </a-entity>
+      /* ================================================= */
+      /* BLACK 3D YOUTUBE SCREEN */
+      /* ================================================= */
 
-      <!-- Load GLB model -->
-      <a-entity 
-        gltf-model="url(vr_gallery_house_baked.gltf)" 
-        position="0 0 -5" 
-        scale="1 1 1">
-      </a-entity>
+      #youtube-screen-ui {
 
-      <!-- Background Music -->
-      <a-entity id="bg-music" 
-        sound="src: url(good-night-lofi-cozy-chill-music-160166.mp3); autoplay: false; loop: true; volume: 0.7">
-      </a-entity>
-    </a-scene>
+        position: fixed;
 
-    <!-- PWA + Overlay Script -->
-    <script>
-      // Register service worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('✅ Service Worker registered:', reg))
-            .catch(err => console.error('❌ Service Worker failed:', err));
-        });
+        width: 720px;
+        height: 405px;
+
+        left: 50%;
+        top: 50%;
+
+        transform:
+          translate(-50%, -50%)
+          perspective(900px)
+          rotateX(0deg);
+
+        background: #000;
+
+        border: 12px solid #111;
+
+        border-radius: 16px;
+
+        box-shadow:
+
+          0 0 0 3px #222,
+
+          0 0 20px rgba(0,0,0,0.9),
+
+          0 0 60px rgba(0,0,0,0.8),
+
+          inset 0 0 25px rgba(255,255,255,0.04);
+
+        z-index: 4500;
+
+        display: none;
+
+        overflow: hidden;
       }
 
-      const installBtn = document.getElementById("install-btn");
-      const overlay = document.getElementById("overlay");
-      const loading = document.getElementById("loading");
-      const countdownEl = document.getElementById("countdown");
+
+      /* ================================================= */
+      /* Screen top label */
+      /* ================================================= */
+
+      #youtube-screen-title {
+
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        z-index: 10;
+
+        color: white;
+
+        font-size: 15px;
+
+        font-weight: bold;
+
+        background: rgba(0,0,0,0.85);
+
+        padding: 8px 14px;
+
+        border-radius: 0 0 8px 0;
+
+        pointer-events: none;
+      }
+
+
+      /* ================================================= */
+      /* YouTube iframe */
+      /* ================================================= */
+
+      #youtube-screen-ui iframe {
+
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
+        border: none;
+
+        border-radius: 5px;
+      }
+
+
+      /* ================================================= */
+      /* Screen Glow */
+      /* ================================================= */
+
+      #youtube-screen-ui::after {
+
+        content: "";
+
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+
+        pointer-events: none;
+
+        box-shadow:
+
+          inset 0 0 30px rgba(255,255,255,0.03),
+
+          inset 0 0 80px rgba(0,0,0,0.7);
+      }
+
+
+      /* ================================================= */
+      /* Screen Close Button */
+      /* ================================================= */
+
+      #youtube-close {
+
+        position: absolute;
+
+        right: 10px;
+        top: 10px;
+
+        width: 30px;
+        height: 30px;
+
+        border: none;
+
+        border-radius: 50%;
+
+        background: rgba(0,0,0,0.8);
+
+        color: white;
+
+        font-size: 18px;
+
+        cursor: pointer;
+
+        z-index: 20;
+      }
+
+      #youtube-close:hover {
+
+        background: rgba(255,0,0,0.8);
+      }
+
+
+      /* ================================================= */
+      /* Mobile */
+      /* ================================================= */
+
+      @media (max-width: 800px) {
+
+        #youtube-screen-ui {
+
+          width: 90vw;
+
+          height: calc(90vw * 0.5625);
+
+          border-width: 7px;
+        }
+
+        #joystick-zone {
+
+          left: 40px;
+
+          bottom: 40px;
+        }
+      }
+
+    </style>
+  </head>
+
+
+  <body>
+
+
+    <!-- ================================================= -->
+    <!-- Countdown Intro -->
+    <!-- ================================================= -->
+
+    <div id="intro-overlay">
+
+      <div id="countdown-text">
+        10
+      </div>
+
+      <p>
+        Entering Virtual Property...
+      </p>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- Joystick -->
+    <!-- ================================================= -->
+
+    <div id="joystick-zone"></div>
+
+
+    <!-- ================================================= -->
+    <!-- BLACK YOUTUBE SCREEN -->
+    <!-- ================================================= -->
+
+    <div id="youtube-screen-ui">
+
+      <div id="youtube-screen-title">
+        🔴 YouTube Live
+      </div>
+
+
+      <button id="youtube-close">
+        ×
+      </button>
+
+
+      <!--
+        IMPORTANT:
+
+        Replace YOUR_VIDEO_ID with the ID of the
+        YouTube live/video you want to play.
+
+        Example:
+
+        https://www.youtube.com/watch?v=dQw4w9WgXcQ
+
+        Video ID:
+
+        dQw4w9WgXcQ
+      -->
+
+      <iframe
+        id="youtube-frame"
+
+        src="https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=0&controls=1&rel=0"
+
+        title="YouTube Live"
+
+        allow="
+          autoplay;
+          encrypted-media;
+          fullscreen;
+          picture-in-picture;
+          web-share
+        "
+
+        allowfullscreen>
+      </iframe>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- A-FRAME VR SCENE -->
+    <!-- ================================================= -->
+
+    <a-scene>
+
+
+      <!-- ================================================= -->
+      <!-- Camera Rig -->
+      <!-- ================================================= -->
+
+      <a-entity
+        id="rig"
+        position="10 1.6 -14">
+
+        <a-camera
+          wasd-controls-enabled="false">
+        </a-camera>
+
+      </a-entity>
+
+
+      <!-- ================================================= -->
+      <!-- GLTF HOUSE -->
+      <!-- ================================================= -->
+
+      <a-entity
+
+        gltf-model="url(vr_gallery_house_baked.gltf)"
+
+        position="0 0 -5"
+
+        scale="1 1 1">
+
+      </a-entity>
+
+
+      <!-- ================================================= -->
+      <!-- Background Music -->
+      <!-- ================================================= -->
+
+      <a-entity
+
+        id="bg-music"
+
+        sound="
+          src: url(good-night-lofi-cozy-chill-music-160166.mp3);
+          autoplay: false;
+          loop: true;
+          volume: 0.7
+        ">
+
+      </a-entity>
+
+
+    </a-scene>
+
+
+    <!-- ================================================= -->
+    <!-- PWA + Overlay Script -->
+    <!-- ================================================= -->
+
+    <script>
+
+      /* =============================================== */
+      /* Register Service Worker */
+      /* =============================================== */
+
+      if ('serviceWorker' in navigator) {
+
+        window.addEventListener('load', () => {
+
+          navigator.serviceWorker.register('/sw.js')
+
+            .then(reg => {
+
+              console.log(
+                '✅ Service Worker registered:',
+                reg
+              );
+
+            })
+
+            .catch(err => {
+
+              console.error(
+                '❌ Service Worker failed:',
+                err
+              );
+
+            });
+
+        });
+
+      }
+
+
+      /* =============================================== */
+      /* Existing references */
+      /* =============================================== */
+
+      const installBtn =
+        document.getElementById("install-btn");
+
+      const overlay =
+        document.getElementById("overlay");
+
+      const loading =
+        document.getElementById("loading");
+
+      const countdownEl =
+        document.getElementById("countdown");
+
 
       let deferredPrompt;
 
+
+      /* =============================================== */
+      /* Loading Screen */
+      /* =============================================== */
+
       function startLoadingScreen() {
+
+        if (!loading || !countdownEl) {
+          return;
+        }
+
         loading.style.display = "flex";
+
         let count = 5;
+
         countdownEl.textContent = count;
+
         const interval = setInterval(() => {
+
           count--;
+
           countdownEl.textContent = count;
+
           if (count <= 0) {
+
             clearInterval(interval);
+
             loading.style.display = "none";
+
           }
+
         }, 1000);
+
       }
+
+
+      /* =============================================== */
+      /* Overlay */
+      /* =============================================== */
 
       function hideOverlayAndRemember() {
-        overlay.style.display = "none";
-        try { localStorage.setItem('pwa_installed', 'true'); } catch (e) {}
+
+        if (overlay) {
+
+          overlay.style.display = "none";
+
+        }
+
+        try {
+
+          localStorage.setItem(
+            'pwa_installed',
+            'true'
+          );
+
+        } catch (e) {}
+
         startLoadingScreen();
+
       }
 
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log("📲 PWA install available");
-      });
 
-      installBtn?.addEventListener("click", async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const choice = await deferredPrompt.userChoice;
-          if (choice.outcome === "accepted") {
-            console.log("✅ User installed app");
-            hideOverlayAndRemember();
-          } else {
-            console.log("❌ User dismissed install");
+      /* =============================================== */
+      /* PWA Installation */
+      /* =============================================== */
+
+      window.addEventListener(
+        'beforeinstallprompt',
+        (e) => {
+
+          e.preventDefault();
+
+          deferredPrompt = e;
+
+          console.log(
+            "📲 PWA install available"
+          );
+
+        }
+      );
+
+
+      if (installBtn) {
+
+        installBtn.addEventListener(
+          "click",
+          async () => {
+
+            if (deferredPrompt) {
+
+              deferredPrompt.prompt();
+
+              const choice =
+                await deferredPrompt.userChoice;
+
+              if (
+                choice.outcome === "accepted"
+              ) {
+
+                console.log(
+                  "✅ User installed app"
+                );
+
+                hideOverlayAndRemember();
+
+              } else {
+
+                console.log(
+                  "❌ User dismissed install"
+                );
+
+              }
+
+              deferredPrompt = null;
+
+            } else {
+
+              alert(
+                "If you see an option in your browser menu like 'Install app' or 'Add to Home screen', use that."
+              );
+
+            }
+
           }
-          deferredPrompt = null;
-        } else {
-          alert("If you see an option in your browser menu like 'Install app' or 'Add to Home screen', use that.");
-        }
-      });
+        );
 
-      window.addEventListener('appinstalled', () => {
-        console.log('📥 PWA installed');
-        hideOverlayAndRemember();
-      });
+      }
 
-      window.addEventListener('load', () => {
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                           || window.navigator.standalone === true; // iOS
-        const remembered = localStorage.getItem('pwa_installed') === 'true';
-        if (isStandalone || remembered) {
+
+      /* =============================================== */
+      /* PWA Installed */
+      /* =============================================== */
+
+      window.addEventListener(
+        'appinstalled',
+        () => {
+
+          console.log(
+            '📥 PWA installed'
+          );
+
           hideOverlayAndRemember();
+
         }
-      });
-    </script> 
+      );
 
-    <!-- Joystick + Movement Script -->
+
+      /* =============================================== */
+      /* Standalone */
+      /* =============================================== */
+
+      window.addEventListener(
+        'load',
+        () => {
+
+          const isStandalone =
+            window.matchMedia(
+              '(display-mode: standalone)'
+            ).matches
+            ||
+            window.navigator.standalone === true;
+
+          const remembered =
+            localStorage.getItem(
+              'pwa_installed'
+            ) === 'true';
+
+
+          if (
+            isStandalone ||
+            remembered
+          ) {
+
+            hideOverlayAndRemember();
+
+          }
+
+        }
+      );
+
+    </script>
+
+
+    <!-- ================================================= -->
+    <!-- JOYSTICK + MOVEMENT -->
+    <!-- ================================================= -->
+
     <script>
-      const rig = document.querySelector("#rig");
-      const camera = rig.querySelector("a-camera");
-      const music = document.querySelector("#bg-music");
 
-      rig.setAttribute("position", { x: 10, y: 1.6, z: -14 });
+      const rig =
+        document.querySelector("#rig");
 
-      let moveX = 0, moveZ = 0;
+      const camera =
+        rig.querySelector("a-camera");
+
+      const music =
+        document.querySelector("#bg-music");
+
+
+      rig.setAttribute(
+        "position",
+        {
+          x: 10,
+          y: 1.6,
+          z: -14
+        }
+      );
+
+
+      let moveX = 0;
+      let moveZ = 0;
+
       let musicPlaying = false;
 
+
+      /* =============================================== */
+      /* Joystick */
+      /* =============================================== */
+
       const joystick = nipplejs.create({
-        zone: document.getElementById('joystick-zone'),
+
+        zone:
+          document.getElementById(
+            'joystick-zone'
+          ),
+
         mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: '#d9d9d9', // greyish base
+
+        position: {
+          left: '50%',
+          top: '50%'
+        },
+
+        color: '#d9d9d9',
+
         size: 120
+
       });
 
-      joystick.on('added', (evt, nipple) => {
-        // Base circle (outer)
-        nipple.ui.back.style.background = "#d9d9d9"; 
-        nipple.ui.back.style.boxShadow = "0 0 12px rgba(0, 0, 0, 0.25)";
 
-        // Inner controller (thumb)
-        nipple.ui.front.style.background = "#f5f5f5"; 
-        nipple.ui.front.style.boxShadow = `
-          0 4px 8px rgba(0, 0, 0, 0.3), 
-          inset 0 2px 4px rgba(255, 255, 255, 0.6)
-        `;
-        nipple.ui.front.style.border = "1px solid #ccc";
-      });
+      /* =============================================== */
+      /* Joystick Appearance */
+      /* =============================================== */
 
-      joystick.on('move', (evt, data) => {
-        if (!musicPlaying) {
-          music.components.sound.playSound();
-          musicPlaying = true;
+      joystick.on(
+        'added',
+        (evt, nipple) => {
+
+          /* Outer circle */
+
+          nipple.ui.back.style.background =
+            "#d9d9d9";
+
+          nipple.ui.back.style.boxShadow =
+            "0 0 12px rgba(0, 0, 0, 0.25)";
+
+
+          /* Inner controller */
+
+          nipple.ui.front.style.background =
+            "#f5f5f5";
+
+          nipple.ui.front.style.boxShadow = `
+
+            0 4px 8px rgba(0, 0, 0, 0.3),
+
+            inset 0 2px 4px
+            rgba(255, 255, 255, 0.6)
+
+          `;
+
+          nipple.ui.front.style.border =
+            "1px solid #ccc";
+
         }
-        const angle = data.angle.radian;
-        const force = data.force;
-        moveX = Math.cos(angle) * force * 0.05;
-        moveZ = -Math.sin(angle) * force * 0.05;
-      });
+      );
 
-      joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
-      const minX = -5, maxX = 5;
-      const minZ = -9, maxZ = -1;
+      /* =============================================== */
+      /* Joystick Movement */
+      /* =============================================== */
+
+      joystick.on(
+        'move',
+        (evt, data) => {
+
+
+          /* Start music */
+
+          if (!musicPlaying) {
+
+            music.components.sound.playSound();
+
+            musicPlaying = true;
+
+          }
+
+
+          const angle =
+            data.angle.radian;
+
+          const force =
+            data.force;
+
+
+          moveX =
+            Math.cos(angle)
+            * force
+            * 0.05;
+
+
+          moveZ =
+            -Math.sin(angle)
+            * force
+            * 0.05;
+
+        }
+      );
+
+
+      joystick.on(
+        'end',
+        () => {
+
+          moveX = 0;
+
+          moveZ = 0;
+
+        }
+      );
+
+
+      /* =============================================== */
+      /* Movement Boundaries */
+      /* =============================================== */
+
+      const minX = -5;
+      const maxX = 5;
+
+      const minZ = -9;
+      const maxZ = -1;
+
+
+      /* =============================================== */
+      /* Movement Loop */
+      /* =============================================== */
 
       function tick() {
-        const pos = rig.getAttribute("position");
-        const direction = new THREE.Vector3();
-        camera.object3D.getWorldDirection(direction);
 
-        const dx = direction.x * moveZ + direction.z * moveX;
-        const dz = direction.z * moveZ - direction.x * moveX;
+        const pos =
+          rig.getAttribute(
+            "position"
+          );
 
-        let newX = pos.x + dx;
-        let newZ = pos.z + dz;
 
-        newX = Math.max(minX, Math.min(maxX, newX));
-        newZ = Math.max(minZ, Math.min(maxZ, newZ));
+        const direction =
+          new THREE.Vector3();
 
-        rig.setAttribute("position", { x: newX, y: pos.y, z: newZ });
 
-        requestAnimationFrame(tick);
-      }
-      tick();
-    </script>
+        camera.object3D
+          .getWorldDirection(
+            direction
+          );
 
-    <!-- Intro Countdown Script -->
-    <script>
-      window.addEventListener("load", () => {
-        const intro = document.getElementById("intro-overlay");
-        const countdownText = document.getElementById("countdown-text");
-        let timeLeft = 10;
 
-        const countdown = setInterval(() => {
-          timeLeft--;
-          countdownText.textContent = timeLeft;
-          if (timeLeft <= 0) {
-            clearInterval(countdown);
-            intro.style.opacity = "0";
-            setTimeout(() => {
-              intro.style.display = "none";
-            }, 1000);
+        const dx =
+          direction.x * moveZ
+          +
+          direction.z * moveX;
+
+
+        const dz =
+          direction.z * moveZ
+          -
+          direction.x * moveX;
+
+
+        let newX =
+          pos.x + dx;
+
+
+        let newZ =
+          pos.z + dz;
+
+
+        newX =
+          Math.max(
+            minX,
+            Math.min(
+              maxX,
+              newX
+            )
+          );
+
+
+        newZ =
+          Math.max(
+            minZ,
+            Math.min(
+              maxZ,
+              newZ
+            )
+          );
+
+
+        rig.setAttribute(
+          "position",
+          {
+            x: newX,
+            y: pos.y,
+            z: newZ
           }
-        }, 1000);
-      });
-    </script>
-    <!-- Disable Inspect / Right Click / DevTools -->
-<script>
-  // Disable Right Click
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-  });
+        );
 
-  // Disable common inspect shortcuts
-  document.addEventListener('keydown', function(e) {
-    // F12
-    if (e.keyCode === 123) e.preventDefault();
 
-    // Ctrl+Shift+I
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) e.preventDefault();
+        requestAnimationFrame(
+          tick
+        );
 
-    // Ctrl+Shift+C
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 67) e.preventDefault();
-
-    // Ctrl+U (View Source)
-    if (e.ctrlKey && e.keyCode === 85) e.preventDefault();
-
-    // Ctrl+Shift+J (Console)
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 74) e.preventDefault();
-  });
-
-  // Disable text selection & copy
-  document.addEventListener('selectstart', e => e.preventDefault());
-  document.addEventListener('copy', e => e.preventDefault());
-
-  // 🔥 DevTools Detection (Strongest Protection)
-  (function() {
-    let checkDevTools = function() {
-      const threshold = 160;
-
-      if (
-        window.outerHeight - window.innerHeight > threshold ||
-        window.outerWidth - window.innerWidth > threshold
-      ) {
-        document.body.innerHTML = "";
-        alert("Developer Tools is disabled on this webpage.");
-        window.close();
       }
-    };
-    setInterval(checkDevTools, 1000);
-  })();
-</script>
+
+
+      tick();
+
+    </script>
+
+
+    <!-- ================================================= -->
+    <!-- INTRO COUNTDOWN -->
+    <!-- ================================================= -->
+
+    <script>
+
+      window.addEventListener(
+        "load",
+        () => {
+
+
+          const intro =
+            document.getElementById(
+              "intro-overlay"
+            );
+
+
+          const countdownText =
+            document.getElementById(
+              "countdown-text"
+            );
+
+
+          let timeLeft = 10;
+
+
+          const countdown =
+            setInterval(
+              () => {
+
+
+                timeLeft--;
+
+
+                countdownText.textContent =
+                  timeLeft;
+
+
+                if (
+                  timeLeft <= 0
+                ) {
+
+                  clearInterval(
+                    countdown
+                  );
+
+
+                  intro.style.opacity =
+                    "0";
+
+
+                  setTimeout(
+                    () => {
+
+                      intro.style.display =
+                        "none";
+
+                    },
+                    1000
+                  );
+
+                }
+
+              },
+              1000
+            );
+
+        }
+      );
+
+    </script>
+
+
+    <!-- ================================================= -->
+    <!-- YOUTUBE SCREEN CONTROL -->
+    <!-- ================================================= -->
+
+    <script>
+
+      window.addEventListener(
+        "load",
+        () => {
+
+
+          const screen =
+            document.getElementById(
+              "youtube-screen-ui"
+            );
+
+
+          const closeButton =
+            document.getElementById(
+              "youtube-close"
+            );
+
+
+          /* =========================================== */
+          /* Show screen after countdown */
+          /* =========================================== */
+
+          setTimeout(
+            () => {
+
+              screen.style.display =
+                "block";
+
+            },
+            10000
+          );
+
+
+          /* =========================================== */
+          /* Close screen */
+          /* =========================================== */
+
+          closeButton.addEventListener(
+            "click",
+            () => {
+
+              screen.style.display =
+                "none";
+
+            }
+          );
+
+
+        }
+      );
+
+    </script>
+
+
+    <!-- ================================================= -->
+    <!-- DISABLE INSPECT / RIGHT CLICK -->
+    <!-- ================================================= -->
+
+    <script>
+
+
+      /* =============================================== */
+      /* Disable Right Click */
+      /* =============================================== */
+
+      document.addEventListener(
+        'contextmenu',
+        function(e) {
+
+          e.preventDefault();
+
+        }
+      );
+
+
+      /* =============================================== */
+      /* Disable Common Inspect Shortcuts */
+      /* =============================================== */
+
+      document.addEventListener(
+        'keydown',
+        function(e) {
+
+
+          /* F12 */
+
+          if (
+            e.keyCode === 123
+          ) {
+
+            e.preventDefault();
+
+          }
+
+
+          /* Ctrl + Shift + I */
+
+          if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            e.keyCode === 73
+          ) {
+
+            e.preventDefault();
+
+          }
+
+
+          /* Ctrl + Shift + C */
+
+          if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            e.keyCode === 67
+          ) {
+
+            e.preventDefault();
+
+          }
+
+
+          /* Ctrl + U */
+
+          if (
+            e.ctrlKey &&
+            e.keyCode === 85
+          ) {
+
+            e.preventDefault();
+
+          }
+
+
+          /* Ctrl + Shift + J */
+
+          if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            e.keyCode === 74
+          ) {
+
+            e.preventDefault();
+
+          }
+
+        }
+      );
+
+
+      /* =============================================== */
+      /* Disable Text Selection */
+      /* =============================================== */
+
+      document.addEventListener(
+        'selectstart',
+        e => e.preventDefault()
+      );
+
+
+      /* =============================================== */
+      /* Disable Copy */
+      /* =============================================== */
+
+      document.addEventListener(
+        'copy',
+        e => e.preventDefault()
+      );
+
+
+      /* =============================================== */
+      /* DevTools Detection */
+      /* =============================================== */
+
+      (function() {
+
+
+        let checkDevTools =
+          function() {
+
+
+            const threshold = 160;
+
+
+            if (
+
+              window.outerHeight -
+              window.innerHeight >
+              threshold
+
+              ||
+
+              window.outerWidth -
+              window.innerWidth >
+              threshold
+
+            ) {
+
+
+              document.body.innerHTML =
+                "";
+
+
+              alert(
+                "Developer Tools is disabled on this webpage."
+              );
+
+
+              window.close();
+
+            }
+
+          };
+
+
+        setInterval(
+          checkDevTools,
+          1000
+        );
+
+
+      })();
+
+    </script>
+
 
   </body>
 </html>
-
-
