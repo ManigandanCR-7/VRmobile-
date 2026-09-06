@@ -1,2103 +1,338 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-
-  <link rel="manifest" href="/manifest.json" />
-
-  <meta charset="utf-8" />
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0" />
-
-  <title>
-    VR Walkthrough + 3D YouTube Screen
-  </title>
-
-
-  <!-- =====================================================
-       A-FRAME
-  ====================================================== -->
-
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-
-
-  <!-- =====================================================
-       NIPPLEJS
-  ====================================================== -->
-
-  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
-
-
-  <style>
-
-
-    /* =====================================================
-       BODY
-    ===================================================== */
-
-    body {
-
-      margin: 0;
-
-      overflow: hidden;
-
-      font-family: Arial, sans-serif;
-
-    }
-
-
-    /* =====================================================
-       EXISTING OVERLAY
-    ===================================================== */
-
-    #overlay {
-
-      position: fixed;
-
-      top: 0;
-      left: 0;
-
-      width: 100%;
-      height: 100%;
-
-      background: rgba(255,255,255,0.3);
-
-      color: white;
-
-      display: flex;
-
-      flex-direction: column;
-
-      justify-content: center;
-
-      align-items: center;
-
-      z-index: 9999;
-
-      text-align: center;
-
-    }
-
-
-    #overlay h1 {
-
-      font-size: 24px;
-
-      margin-bottom: 20px;
-
-    }
-
-
-    #install-btn {
-
-      background: #00cc66;
-
-      color: white;
-
-      padding: 12px 24px;
-
-      border: none;
-
-      border-radius: 8px;
-
-      cursor: pointer;
-
-      font-size: 18px;
-
-    }
-
-
-    #install-btn:hover {
-
-      background: #00994d;
-
-    }
-
-
-    /* =====================================================
-       JOYSTICK
-    ===================================================== */
-
-    #joystick-zone {
-
-      position: absolute;
-
-      bottom: 70px;
-      left: 130px;
-
-      width: 150px;
-      height: 150px;
-
-      background: rgba(0,0,0,0.1);
-
-      border-radius: 50%;
-
-      touch-action: none;
-
-      z-index: 6000;
-
-    }
-
-
-    /* =====================================================
-       LOADING
-    ===================================================== */
-
-    #loading {
-
-      position: fixed;
-
-      top: 0;
-      left: 0;
-
-      width: 100%;
-      height: 100%;
-
-      background: rgba(0,0,0,0.95);
-
-      display: flex;
-
-      justify-content: center;
-      align-items: center;
-
-      z-index: 9998;
-
-      color: white;
-
-      font-size: 48px;
-
-      font-weight: bold;
-
-      flex-direction: column;
-
-    }
-
-
-    /* =====================================================
-       INTRO COUNTDOWN
-    ===================================================== */
-
-    #intro-overlay {
-
-      position: fixed;
-
-      top: 0;
-      left: 0;
-
-      width: 100%;
-      height: 100%;
-
-      background: rgba(0,0,0,0.7);
-
-      backdrop-filter: blur(8px);
-
-      display: flex;
-
-      flex-direction: column;
-
-      justify-content: center;
-      align-items: center;
-
-      color: white;
-
-      font-family: Arial, sans-serif;
-
-      z-index: 99999;
-
-      transition: opacity 1s ease-out;
-
-    }
-
-
-    #countdown-text {
-
-      font-size: 72px;
-
-      font-weight: bold;
-
-      margin-bottom: 20px;
-
-    }
-
-
-    #intro-overlay p {
-
-      font-size: 20px;
-
-      opacity: 0.8;
-
-    }
-
-
-    /* =====================================================
-       3D YOUTUBE DOM LAYER
-
-       IMPORTANT:
-
-       This is NOT the old bottom popup.
-
-       JavaScript dynamically positions this element
-       over the physical 3D TV screen.
-    ===================================================== */
-
-    #youtube-3d-layer {
-
-      position: fixed;
-
-      display: none;
-
-      background: #000;
-
-      overflow: hidden;
-
-      z-index: 5000;
-
-      pointer-events: auto;
-
-      transform-origin: center center;
-
-      border-radius: 3px;
-
-      box-shadow:
-        0 0 12px rgba(0,0,0,0.9);
-
-    }
-
-
-    #youtube-3d-layer iframe {
-
-      display: block;
-
-      width: 100%;
-
-      height: 100%;
-
-      border: none;
-
-    }
-
-
-    /* =====================================================
-       CLOSE BUTTON
-    ===================================================== */
-
-    #youtube-layer-close {
-
-      position: absolute;
-
-      right: 6px;
-
-      top: 6px;
-
-      width: 28px;
-
-      height: 28px;
-
-      border: none;
-
-      border-radius: 50%;
-
-      background: rgba(0,0,0,0.8);
-
-      color: white;
-
-      font-size: 18px;
-
-      line-height: 28px;
-
-      text-align: center;
-
-      cursor: pointer;
-
-      z-index: 20;
-
-      opacity: 0.8;
-
-    }
-
-
-    #youtube-layer-close:hover {
-
-      opacity: 1;
-
-    }
-
-
-    /* =====================================================
-       TV OPEN BUTTON
-
-       Small DOM button that appears when the user
-       approaches/clicks the TV.
-    ===================================================== */
-
-    #youtube-open-message {
-
-      position: fixed;
-
-      left: 50%;
-
-      bottom: 25px;
-
-      transform: translateX(-50%);
-
-      display: none;
-
-      z-index: 7000;
-
-      background: rgba(0,0,0,0.8);
-
-      color: white;
-
-      padding: 10px 18px;
-
-      border-radius: 20px;
-
-      font-size: 14px;
-
-      pointer-events: none;
-
-    }
-
-
-    /* =====================================================
-       MOBILE
-    ===================================================== */
-
-    @media(max-width:800px) {
+  <head>
+    <link rel="manifest" href="/manifest.json" />
+    <meta charset="utf-8" />
+    <title>VR Walkthrough with Joystick + GLB Model + Music</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+
+      /* Overlay styles */
+      #overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(255, 255, 255, 0.3); 
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        text-align: center;
+      }
+      #overlay h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+      #install-btn {
+        background: #00cc66;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+      }
+      #install-btn:hover {
+        background: #00994d;
+      }
 
       #joystick-zone {
-
-        left: 40px;
-
-        bottom: 40px;
-
+        position: absolute;
+        bottom: 70px;
+        left: 130px;
+        width: 150px;
+        height: 150px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        touch-action: none;
+      } 
+      #loading {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9998;
+        color: white;
+        font-size: 48px;
+        font-weight: bold;
+        flex-direction: column;
       }
 
-
-      #youtube-layer-close {
-
-        width: 24px;
-
-        height: 24px;
-
-        line-height: 24px;
-
-        font-size: 15px;
-
+      /* Intro Countdown Overlay */
+      #intro-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-family: 'Arial', sans-serif;
+        z-index: 99999;
+        transition: opacity 1s ease-out;
       }
-
-    }
-
-
-  </style>
-
-</head>
-
-
-<body>
-
-
-  <!-- ===================================================
-       INTRO
-  =================================================== -->
-
-  <div id="intro-overlay">
-
-    <div id="countdown-text">
-      10
+      #countdown-text {
+        font-size: 72px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+      #intro-overlay p {
+        font-size: 20px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Countdown Intro Overlay -->
+    <div id="intro-overlay">
+      <div id="countdown-text">10</div>
+      <p>Entering Virtual Property...</p>
     </div>
 
-    <p>
-      Entering Virtual Property...
-    </p>
-
-  </div>
-
-
-
-  <!-- ===================================================
-       JOYSTICK
-  =================================================== -->
-
-  <div id="joystick-zone"></div>
-
-
-
-  <!-- ===================================================
-       3D YOUTUBE INTERACTIVE LAYER
-
-       This element is dynamically positioned by
-       JavaScript over the 3D TV screen.
-  =================================================== -->
-
-  <div id="youtube-3d-layer">
-
-    <button id="youtube-layer-close">
-      ×
-    </button>
-
-
-    <iframe
-
-      id="youtube-frame"
-
-      src="https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=0&controls=1&rel=0"
-
-      title="YouTube Embedded Player"
-
-      allow="
-        autoplay;
-        encrypted-media;
-        fullscreen;
-        picture-in-picture;
-        web-share
-      "
-
-      allowfullscreen>
-
-    </iframe>
-
-  </div>
-
-
-
-  <!-- ===================================================
-       SMALL INSTRUCTION
-  =================================================== -->
-
-  <div id="youtube-open-message">
-
-    Click the TV screen to interact
-
-  </div>
-
-
-
-  <!-- ===================================================
-       A-FRAME SCENE
-  =================================================== -->
-
-  <a-scene>
-
-
-    <!-- =================================================
-         CAMERA RIG
-    ================================================= -->
-
-    <a-entity
-
-      id="rig"
-
-      position="10 1.6 -14">
-
-      <a-camera
-
-        id="camera"
-
-        wasd-controls-enabled="false">
-
-      </a-camera>
-
-    </a-entity>
-
-
-
-    <!-- =================================================
-         EXISTING GLTF HOUSE
-    ================================================= -->
-
-    <a-entity
-
-      gltf-model="url(vr_gallery_house_baked.gltf)"
-
-      position="0 0 -5"
-
-      scale="1 1 1">
-
-    </a-entity>
-
-
-
-    <!-- =================================================
-         BACKGROUND MUSIC
-    ================================================= -->
-
-    <a-entity
-
-      id="bg-music"
-
-      sound="
-        src: url(good-night-lofi-cozy-chill-music-160166.mp3);
-        autoplay: false;
-        loop: true;
-        volume: 0.7
-      ">
-
-    </a-entity>
-
-
-
-    <!-- =================================================
-         =================================================
-                    SMALL 3D YOUTUBE TV
-         =================================================
-    ================================================= -->
-
-    <a-entity
-
-      id="youtube-tv"
-
-      position="0 2.4 -4"
-
-      rotation="0 0 0">
-
-
-
-      <!-- ===============================================
-           SMALLER OUTER TV FRAME
-      =============================================== -->
-
-      <a-box
-
-        id="tv-frame"
-
-        position="0 0 0"
-
-        width="3.6"
-
-        height="2.15"
-
-        depth="0.20"
-
-        color="#050505"
-
-        material="
-          roughness: 0.25;
-          metalness: 0.75
-        ">
-
-      </a-box>
-
-
-
-      <!-- ===============================================
-           INNER SCREEN
-      =============================================== -->
-
-      <a-plane
-
-        id="tv-screen"
-
-        position="0 0 0.115"
-
-        width="3.30"
-
-        height="1.86"
-
-        color="#111111"
-
-        material="
-          shader: flat;
-          color: #111111
-        ">
-
-      </a-plane>
-
-
-
-      <!-- ===============================================
-           SCREEN GLOW
-      =============================================== -->
-
-      <a-plane
-
-        position="0 0 0.105"
-
-        width="3.38"
-
-        height="1.94"
-
-        color="#000000"
-
-        material="
-          shader: flat;
-          opacity: 0.18;
-          transparent: true
-        ">
-
-      </a-plane>
-
-
-
-      <!-- ===============================================
-           TOP LABEL
-      =============================================== -->
-
-      <a-text
-
-        value="YOUTUBE LIVE"
-
-        position="0 1.25 0.12"
-
-        align="center"
-
-        width="3"
-
-        color="#ffffff"
-
-        side="double">
-
-      </a-text>
-
-
-
-      <!-- ===============================================
-           RED LIVE INDICATOR
-      =============================================== -->
-
-      <a-sphere
-
-        position="-1.12 1.25 0.13"
-
-        radius="0.045"
-
-        color="#ff0000">
-
-      </a-sphere>
-
-
-
-      <!-- ===============================================
-           BOTTOM TV BAR
-      =============================================== -->
-
-      <a-box
-
-        position="0 -1.10 0"
-
-        width="3.7"
-
-        height="0.10"
-
-        depth="0.24"
-
-        color="#090909">
-
-      </a-box>
-
-
-
-      <!-- ===============================================
-           LEFT TV LEG
-      =============================================== -->
-
-      <a-box
-
-        position="-1.25 -1.30 0"
-
-        width="0.13"
-
-        height="0.30"
-
-        depth="0.22"
-
-        color="#050505">
-
-      </a-box>
-
-
-
-      <!-- ===============================================
-           RIGHT TV LEG
-      =============================================== -->
-
-      <a-box
-
-        position="1.25 -1.30 0"
-
-        width="0.13"
-
-        height="0.30"
-
-        depth="0.22"
-
-        color="#050505">
-
-      </a-box>
-
-
-
-      <!-- ===============================================
-           INTERACTION AREA
-      =============================================== -->
-
-      <a-plane
-
-        id="tv-interaction"
-
-        position="0 0 0.17"
-
-        width="3.30"
-
-        height="1.86"
-
-        material="
-          transparent: true;
-          opacity: 0
-        "
-
-        class="clickable">
-
-      </a-plane>
-
-
-    </a-entity>
-
-
-
-    <!-- =================================================
-         TV LIGHT
-    ================================================= -->
-
-    <a-entity
-
-      light="
-        type: point;
-        intensity: 1.2;
-        distance: 8;
-        color: #ffffff
-      "
-
-      position="0 2.4 -3.5">
-
-    </a-entity>
-
-
-  </a-scene>
-
-
-
-  <!-- ===================================================
-       PWA + OVERLAY SCRIPT
-  =================================================== -->
-
-  <script>
-
-
-    /* =================================================
-       SERVICE WORKER
-    ================================================= */
-
-    if ('serviceWorker' in navigator) {
-
-      window.addEventListener(
-        'load',
-        () => {
-
-          navigator.serviceWorker
-            .register('/sw.js')
-
-            .then(
-              reg => {
-
-                console.log(
-                  '✅ Service Worker registered:',
-                  reg
-                );
-
-              }
-            )
-
-            .catch(
-              err => {
-
-                console.error(
-                  '❌ Service Worker failed:',
-                  err
-                );
-
-              }
-            );
-
-        }
-      );
-
-    }
-
-
-
-    /* =================================================
-       EXISTING REFERENCES
-    ================================================= */
-
-    const installBtn =
-      document.getElementById(
-        "install-btn"
-      );
-
-
-    const overlay =
-      document.getElementById(
-        "overlay"
-      );
-
-
-    const loading =
-      document.getElementById(
-        "loading"
-      );
-
-
-    const countdownEl =
-      document.getElementById(
-        "countdown"
-      );
-
-
-    let deferredPrompt;
-
-
-
-    /* =================================================
-       LOADING SCREEN
-    ================================================= */
-
-    function startLoadingScreen() {
-
-      if (!loading || !countdownEl) {
-
-        return;
-
+    <!-- Joystick -->
+    <div id="joystick-zone"></div>
+
+    <!-- A-Frame Scene -->
+    <a-scene>
+      <!-- Camera Rig -->
+      <a-entity id="rig" position="10 1.6 -14">
+        <a-camera wasd-controls-enabled="false"></a-camera>
+      </a-entity>
+
+      <!-- Load GLB model -->
+      <a-entity 
+        gltf-model="url(vr_gallery_house_baked.gltf)" 
+        position="0 0 -5" 
+        scale="1 1 1">
+      </a-entity>
+
+      <!-- Background Music -->
+      <a-entity id="bg-music" 
+        sound="src: url(good-night-lofi-cozy-chill-music-160166.mp3); autoplay: false; loop: true; volume: 0.7">
+      </a-entity>
+    </a-scene>
+
+    <!-- PWA + Overlay Script -->
+    <script>
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('✅ Service Worker registered:', reg))
+            .catch(err => console.error('❌ Service Worker failed:', err));
+        });
       }
 
+      const installBtn = document.getElementById("install-btn");
+      const overlay = document.getElementById("overlay");
+      const loading = document.getElementById("loading");
+      const countdownEl = document.getElementById("countdown");
 
-      loading.style.display =
-        "flex";
+      let deferredPrompt;
 
-
-      let count = 5;
-
-
-      countdownEl.textContent =
-        count;
-
-
-      const interval =
-        setInterval(
-          () => {
-
-            count--;
-
-
-            countdownEl.textContent =
-              count;
-
-
-            if (count <= 0) {
-
-              clearInterval(
-                interval
-              );
-
-
-              loading.style.display =
-                "none";
-
-            }
-
-          },
-          1000
-        );
-
-    }
-
-
-
-    /* =================================================
-       HIDE OVERLAY
-    ================================================= */
-
-    function hideOverlayAndRemember() {
-
-      if (overlay) {
-
-        overlay.style.display =
-          "none";
-
+      function startLoadingScreen() {
+        loading.style.display = "flex";
+        let count = 5;
+        countdownEl.textContent = count;
+        const interval = setInterval(() => {
+          count--;
+          countdownEl.textContent = count;
+          if (count <= 0) {
+            clearInterval(interval);
+            loading.style.display = "none";
+          }
+        }, 1000);
       }
 
-
-      try {
-
-        localStorage.setItem(
-          'pwa_installed',
-          'true'
-        );
-
+      function hideOverlayAndRemember() {
+        overlay.style.display = "none";
+        try { localStorage.setItem('pwa_installed', 'true'); } catch (e) {}
+        startLoadingScreen();
       }
 
-      catch(e) {}
-
-
-      startLoadingScreen();
-
-    }
-
-
-
-    /* =================================================
-       PWA INSTALL
-    ================================================= */
-
-    window.addEventListener(
-      'beforeinstallprompt',
-      e => {
-
+      window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
-
         deferredPrompt = e;
-
-        console.log(
-          "📲 PWA install available"
-        );
-
-      }
-    );
-
-
-
-    if (installBtn) {
-
-      installBtn.addEventListener(
-        "click",
-        async () => {
-
-          if (deferredPrompt) {
-
-            deferredPrompt.prompt();
-
-
-            const choice =
-              await deferredPrompt
-                .userChoice;
-
-
-            if (
-              choice.outcome ===
-              "accepted"
-            ) {
-
-              console.log(
-                "✅ User installed app"
-              );
-
-
-              hideOverlayAndRemember();
-
-            }
-
-            else {
-
-              console.log(
-                "❌ User dismissed install"
-              );
-
-            }
-
-
-            deferredPrompt = null;
-
-          }
-
-          else {
-
-            alert(
-              "If you see an option in your browser menu like 'Install app' or 'Add to Home screen', use that."
-            );
-
-          }
-
-        }
-      );
-
-    }
-
-
-
-    /* =================================================
-       APP INSTALLED
-    ================================================= */
-
-    window.addEventListener(
-      'appinstalled',
-      () => {
-
-        console.log(
-          '📥 PWA installed'
-        );
-
-
-        hideOverlayAndRemember();
-
-      }
-    );
-
-
-
-    /* =================================================
-       STANDALONE
-    ================================================= */
-
-    window.addEventListener(
-      'load',
-      () => {
-
-        const isStandalone =
-          window.matchMedia(
-            '(display-mode: standalone)'
-          ).matches
-
-          ||
-
-          window.navigator.standalone === true;
-
-
-        const remembered =
-          localStorage.getItem(
-            'pwa_installed'
-          ) === 'true';
-
-
-        if (
-          isStandalone ||
-          remembered
-        ) {
-
-          hideOverlayAndRemember();
-
-        }
-
-      }
-    );
-
-
-  </script>
-
-
-
-  <!-- ===================================================
-       JOYSTICK + MOVEMENT
-  =================================================== -->
-
-  <script>
-
-
-    const rig =
-      document.querySelector(
-        "#rig"
-      );
-
-
-    const camera =
-      rig.querySelector(
-        "a-camera"
-      );
-
-
-    const music =
-      document.querySelector(
-        "#bg-music"
-      );
-
-
-    rig.setAttribute(
-      "position",
-      {
-        x: 10,
-        y: 1.6,
-        z: -14
-      }
-    );
-
-
-    let moveX = 0;
-
-    let moveZ = 0;
-
-    let musicPlaying = false;
-
-
-
-    /* =================================================
-       JOYSTICK
-    ================================================= */
-
-    const joystick =
-      nipplejs.create({
-
-        zone:
-          document.getElementById(
-            'joystick-zone'
-          ),
-
-        mode:
-          'static',
-
-        position: {
-          left: '50%',
-          top: '50%'
-        },
-
-        color:
-          '#d9d9d9',
-
-        size:
-          120
-
+        console.log("📲 PWA install available");
       });
 
-
-
-    /* =================================================
-       JOYSTICK STYLE
-    ================================================= */
-
-    joystick.on(
-      'added',
-      (evt,nipple) => {
-
-
-        nipple.ui.back.style.background =
-          "#d9d9d9";
-
-
-        nipple.ui.back.style.boxShadow =
-          "0 0 12px rgba(0,0,0,0.25)";
-
-
-        nipple.ui.front.style.background =
-          "#f5f5f5";
-
-
-        nipple.ui.front.style.boxShadow = `
-
-          0 4px 8px
-          rgba(0,0,0,0.3),
-
-          inset 0 2px 4px
-          rgba(255,255,255,0.6)
-
-        `;
-
-
-        nipple.ui.front.style.border =
-          "1px solid #ccc";
-
-      }
-    );
-
-
-
-    /* =================================================
-       JOYSTICK MOVEMENT
-    ================================================= */
-
-    joystick.on(
-      'move',
-      (evt,data) => {
-
-
-        if (!musicPlaying) {
-
-          if (
-            music &&
-            music.components &&
-            music.components.sound
-          ) {
-
-            music.components.sound
-              .playSound();
-
-            musicPlaying = true;
-
+      installBtn?.addEventListener("click", async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const choice = await deferredPrompt.userChoice;
+          if (choice.outcome === "accepted") {
+            console.log("✅ User installed app");
+            hideOverlayAndRemember();
+          } else {
+            console.log("❌ User dismissed install");
           }
-
+          deferredPrompt = null;
+        } else {
+          alert("If you see an option in your browser menu like 'Install app' or 'Add to Home screen', use that.");
         }
+      });
 
+      window.addEventListener('appinstalled', () => {
+        console.log('📥 PWA installed');
+        hideOverlayAndRemember();
+      });
 
-        const angle =
-          data.angle.radian;
-
-
-        const force =
-          data.force;
-
-
-        moveX =
-          Math.cos(angle)
-          *
-          force
-          *
-          0.05;
-
-
-        moveZ =
-          -Math.sin(angle)
-          *
-          force
-          *
-          0.05;
-
-      }
-    );
-
-
-
-    joystick.on(
-      'end',
-      () => {
-
-        moveX = 0;
-
-        moveZ = 0;
-
-      }
-    );
-
-
-
-    /* =================================================
-       MOVEMENT LIMITS
-    ================================================= */
-
-    const minX = -5;
-
-    const maxX = 5;
-
-    const minZ = -9;
-
-    const maxZ = -1;
-
-
-
-    /* =================================================
-       MOVEMENT LOOP
-    ================================================= */
-
-    function tick() {
-
-
-      const pos =
-        rig.getAttribute(
-          "position"
-        );
-
-
-      const direction =
-        new THREE.Vector3();
-
-
-      camera.object3D
-        .getWorldDirection(
-          direction
-        );
-
-
-      const dx =
-        direction.x *
-        moveZ
-        +
-        direction.z *
-        moveX;
-
-
-      const dz =
-        direction.z *
-        moveZ
-        -
-        direction.x *
-        moveX;
-
-
-      let newX =
-        pos.x + dx;
-
-
-      let newZ =
-        pos.z + dz;
-
-
-      newX =
-        Math.max(
-          minX,
-          Math.min(
-            maxX,
-            newX
-          )
-        );
-
-
-      newZ =
-        Math.max(
-          minZ,
-          Math.min(
-            maxZ,
-            newZ
-          )
-        );
-
-
-      rig.setAttribute(
-        "position",
-        {
-          x: newX,
-          y: pos.y,
-          z: newZ
+      window.addEventListener('load', () => {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                           || window.navigator.standalone === true; // iOS
+        const remembered = localStorage.getItem('pwa_installed') === 'true';
+        if (isStandalone || remembered) {
+          hideOverlayAndRemember();
         }
-      );
+      });
+    </script> 
 
+    <!-- Joystick + Movement Script -->
+    <script>
+      const rig = document.querySelector("#rig");
+      const camera = rig.querySelector("a-camera");
+      const music = document.querySelector("#bg-music");
 
-      requestAnimationFrame(
-        tick
-      );
+      rig.setAttribute("position", { x: 10, y: 1.6, z: -14 });
 
-    }
+      let moveX = 0, moveZ = 0;
+      let musicPlaying = false;
 
+      const joystick = nipplejs.create({
+        zone: document.getElementById('joystick-zone'),
+        mode: 'static',
+        position: { left: '50%', top: '50%' },
+        color: '#d9d9d9', // greyish base
+        size: 120
+      });
 
-    tick();
+      joystick.on('added', (evt, nipple) => {
+        // Base circle (outer)
+        nipple.ui.back.style.background = "#d9d9d9"; 
+        nipple.ui.back.style.boxShadow = "0 0 12px rgba(0, 0, 0, 0.25)";
 
+        // Inner controller (thumb)
+        nipple.ui.front.style.background = "#f5f5f5"; 
+        nipple.ui.front.style.boxShadow = `
+          0 4px 8px rgba(0, 0, 0, 0.3), 
+          inset 0 2px 4px rgba(255, 255, 255, 0.6)
+        `;
+        nipple.ui.front.style.border = "1px solid #ccc";
+      });
 
-  </script>
+      joystick.on('move', (evt, data) => {
+        if (!musicPlaying) {
+          music.components.sound.playSound();
+          musicPlaying = true;
+        }
+        const angle = data.angle.radian;
+        const force = data.force;
+        moveX = Math.cos(angle) * force * 0.05;
+        moveZ = -Math.sin(angle) * force * 0.05;
+      });
 
+      joystick.on('end', () => { moveX = 0; moveZ = 0; });
 
+      const minX = -5, maxX = 5;
+      const minZ = -9, maxZ = -1;
 
-  <!-- ===================================================
-       INTRO COUNTDOWN
-  =================================================== -->
+      function tick() {
+        const pos = rig.getAttribute("position");
+        const direction = new THREE.Vector3();
+        camera.object3D.getWorldDirection(direction);
 
-  <script>
+        const dx = direction.x * moveZ + direction.z * moveX;
+        const dz = direction.z * moveZ - direction.x * moveX;
 
+        let newX = pos.x + dx;
+        let newZ = pos.z + dz;
 
-    window.addEventListener(
-      "load",
-      () => {
+        newX = Math.max(minX, Math.min(maxX, newX));
+        newZ = Math.max(minZ, Math.min(maxZ, newZ));
 
+        rig.setAttribute("position", { x: newX, y: pos.y, z: newZ });
 
-        const intro =
-          document.getElementById(
-            "intro-overlay"
-          );
+        requestAnimationFrame(tick);
+      }
+      tick();
+    </script>
 
-
-        const countdownText =
-          document.getElementById(
-            "countdown-text"
-          );
-
-
+    <!-- Intro Countdown Script -->
+    <script>
+      window.addEventListener("load", () => {
+        const intro = document.getElementById("intro-overlay");
+        const countdownText = document.getElementById("countdown-text");
         let timeLeft = 10;
 
-
-        const countdown =
-          setInterval(
-            () => {
-
-
-              timeLeft--;
-
-
-              countdownText.textContent =
-                timeLeft;
-
-
-              if (
-                timeLeft <= 0
-              ) {
-
-
-                clearInterval(
-                  countdown
-                );
-
-
-                intro.style.opacity =
-                  "0";
-
-
-                setTimeout(
-                  () => {
-
-                    intro.style.display =
-                      "none";
-
-                  },
-                  1000
-                );
-
-              }
-
-            },
-            1000
-          );
-
-      }
-    );
-
-
-  </script>
-
-
-
-  <!-- ===================================================
-       3D TV + INTERACTIVE YOUTUBE
-  =================================================== -->
-
-  <script>
-
-
-    const tv =
-      document.getElementById(
-        "youtube-tv"
-      );
-
-
-    const tvInteraction =
-      document.getElementById(
-        "tv-interaction"
-      );
-
-
-    const youtubeLayer =
-      document.getElementById(
-        "youtube-3d-layer"
-      );
-
-
-    const youtubeFrame =
-      document.getElementById(
-        "youtube-frame"
-      );
-
-
-    const youtubeClose =
-      document.getElementById(
-        "youtube-layer-close"
-      );
-
-
-    const openMessage =
-      document.getElementById(
-        "youtube-open-message"
-      );
-
-
-
-    /* =================================================
-       SCREEN SIZE
-
-       Matches the A-Frame TV screen:
-
-       width  = 3.30
-       height = 1.86
-    ================================================= */
-
-    const screenWidth =
-      3.30;
-
-
-    const screenHeight =
-      1.86;
-
-
-
-    /* =================================================
-       SHOW YOUTUBE
-    ================================================= */
-
-    function showYouTubeLayer() {
-
-      youtubeLayer.style.display =
-        "block";
-
-
-      openMessage.style.display =
-        "none";
-
-
-      updateYouTubeLayer();
-
-    }
-
-
-
-    /* =================================================
-       HIDE YOUTUBE
-    ================================================= */
-
-    function hideYouTubeLayer() {
-
-      youtubeLayer.style.display =
-        "none";
-
-    }
-
-
-
-    /* =================================================
-       CLICK THE 3D TV
-    ================================================= */
-
-    tvInteraction.addEventListener(
-      "click",
-      () => {
-
-        showYouTubeLayer();
-
-      }
-    );
-
-
-
-    /* =================================================
-       CLOSE
-    ================================================= */
-
-    youtubeClose.addEventListener(
-      "click",
-      event => {
-
-        event.stopPropagation();
-
-        hideYouTubeLayer();
-
-      }
-    );
-
-
-
-    /* =================================================
-       UPDATE 3D YOUTUBE POSITION
-       
-       This converts the 3D TV screen position
-       into a browser-screen position.
-    ================================================= */
-
-    function updateYouTubeLayer() {
-
-
-      if (
-        youtubeLayer.style.display ===
-        "none"
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        !tv ||
-        !tv.object3D ||
-        !camera ||
-        !camera.object3D
-      ) {
-
-        return;
-
-      }
-
-
-      const renderer =
-        document.querySelector(
-          "a-scene"
-        ).renderer;
-
-
-      if (!renderer) {
-
-        requestAnimationFrame(
-          updateYouTubeLayer
-        );
-
-        return;
-
-      }
-
-
-      const canvas =
-        renderer.domElement;
-
-
-      const canvasRect =
-        canvas.getBoundingClientRect();
-
-
-
-      /* ================================================
-         WORLD CENTER OF SCREEN
-      ================================================= */
-
-      const center =
-        new THREE.Vector3(
-          0,
-          0,
-          0.125
-        );
-
-
-      tv.object3D.updateWorldMatrix(
-        true,
-        false
-      );
-
-
-      center.applyMatrix4(
-        tv.object3D.matrixWorld
-      );
-
-
-      center.project(
-        camera.object3D
-      );
-
-
-      const centerX =
-        canvasRect.left
-        +
-        (center.x + 1)
-        *
-        canvasRect.width
-        /
-        2;
-
-
-      const centerY =
-        canvasRect.top
-        +
-        (1 - center.y)
-        *
-        canvasRect.height
-        /
-        2;
-
-
-
-      /* ================================================
-         CALCULATE SCREEN WIDTH
-      ================================================= */
-
-      const leftPoint =
-        new THREE.Vector3(
-          -screenWidth / 2,
-          0,
-          0.125
-        );
-
-
-      const rightPoint =
-        new THREE.Vector3(
-          screenWidth / 2,
-          0,
-          0.125
-        );
-
-
-      leftPoint.applyMatrix4(
-        tv.object3D.matrixWorld
-      );
-
-
-      rightPoint.applyMatrix4(
-        tv.object3D.matrixWorld
-      );
-
-
-      leftPoint.project(
-        camera.object3D
-      );
-
-
-      rightPoint.project(
-        camera.object3D
-      );
-
-
-      const leftX =
-        canvasRect.left
-        +
-        (leftPoint.x + 1)
-        *
-        canvasRect.width
-        /
-        2;
-
-
-      const rightX =
-        canvasRect.left
-        +
-        (rightPoint.x + 1)
-        *
-        canvasRect.width
-        /
-        2;
-
-
-      let screenPixelWidth =
-        Math.abs(
-          rightX - leftX
-        );
-
-
-
-      /* ================================================
-         CALCULATE SCREEN HEIGHT
-      ================================================= */
-
-      const topPoint =
-        new THREE.Vector3(
-          0,
-          screenHeight / 2,
-          0.125
-        );
-
-
-      const bottomPoint =
-        new THREE.Vector3(
-          0,
-          -screenHeight / 2,
-          0.125
-        );
-
-
-      topPoint.applyMatrix4(
-        tv.object3D.matrixWorld
-      );
-
-
-      bottomPoint.applyMatrix4(
-        tv.object3D.matrixWorld
-      );
-
-
-      topPoint.project(
-        camera.object3D
-      );
-
-
-      bottomPoint.project(
-        camera.object3D
-      );
-
-
-      const topY =
-        canvasRect.top
-        +
-        (1 - topPoint.y)
-        *
-        canvasRect.height
-        /
-        2;
-
-
-      const bottomY =
-        canvasRect.top
-        +
-        (1 - bottomPoint.y)
-        *
-        canvasRect.height
-        /
-        2;
-
-
-      let screenPixelHeight =
-        Math.abs(
-          bottomY - topY
-        );
-
-
-
-      /* ================================================
-         MINIMUM SIZE PROTECTION
-      ================================================= */
-
-      screenPixelWidth =
-        Math.max(
-          screenPixelWidth,
-          10
-        );
-
-
-      screenPixelHeight =
-        Math.max(
-          screenPixelHeight,
-          6
-        );
-
-
-
-      /* ================================================
-         APPLY POSITION
-      ================================================= */
-
-      youtubeLayer.style.width =
-        screenPixelWidth + "px";
-
-
-      youtubeLayer.style.height =
-        screenPixelHeight + "px";
-
-
-      youtubeLayer.style.left =
-        (
-          centerX
-          -
-          screenPixelWidth / 2
-        ) + "px";
-
-
-      youtubeLayer.style.top =
-        (
-          centerY
-          -
-          screenPixelHeight / 2
-        ) + "px";
-
-
-
-      /* ================================================
-         CONTINUE TRACKING
-      ================================================= */
-
-      requestAnimationFrame(
-        updateYouTubeLayer
-      );
-
-    }
-
-
-
-    /* =================================================
-       START POSITION TRACKING
-    ================================================= */
-
-    function startYouTubeTracking() {
-
-      if (
-        youtubeLayer.style.display !==
-        "none"
-      ) {
-
-        updateYouTubeLayer();
-
-      }
-
-    }
-
-
-
-    /* =================================================
-       WINDOW RESIZE
-    ================================================= */
-
-    window.addEventListener(
-      "resize",
-      () => {
-
-        if (
-          youtubeLayer.style.display !==
-          "none"
-        ) {
-
-          updateYouTubeLayer();
-
-        }
-
-      }
-    );
-
-
-  </script>
-
-
-
-  <!-- ===================================================
-       DISABLE INSPECT / RIGHT CLICK
-  =================================================== -->
-
-  <script>
-
-
-    /* =================================================
-       RIGHT CLICK
-    ================================================= */
-
-    document.addEventListener(
-      'contextmenu',
-      function(e) {
-
-        e.preventDefault();
-
-      }
-    );
-
-
-
-    /* =================================================
-       KEYBOARD
-    ================================================= */
-
-    document.addEventListener(
-      'keydown',
-      function(e) {
-
-
-        /* F12 */
-
-        if (
-          e.keyCode === 123
-        ) {
-
-          e.preventDefault();
-
-        }
-
-
-        /* Ctrl + Shift + I */
-
-        if (
-          e.ctrlKey &&
-          e.shiftKey &&
-          e.keyCode === 73
-        ) {
-
-          e.preventDefault();
-
-        }
-
-
-        /* Ctrl + Shift + C */
-
-        if (
-          e.ctrlKey &&
-          e.shiftKey &&
-          e.keyCode === 67
-        ) {
-
-          e.preventDefault();
-
-        }
-
-
-        /* Ctrl + U */
-
-        if (
-          e.ctrlKey &&
-          e.keyCode === 85
-        ) {
-
-          e.preventDefault();
-
-        }
-
-
-        /* Ctrl + Shift + J */
-
-        if (
-          e.ctrlKey &&
-          e.shiftKey &&
-          e.keyCode === 74
-        ) {
-
-          e.preventDefault();
-
-        }
-
-      }
-    );
-
-
-
-    /* =================================================
-       TEXT SELECTION
-    ================================================= */
-
-    document.addEventListener(
-      'selectstart',
-      e => e.preventDefault()
-    );
-
-
-
-    /* =================================================
-       COPY
-    ================================================= */
-
-    document.addEventListener(
-      'copy',
-      e => e.preventDefault()
-    );
-
-
-
-    /* =================================================
-       DEVTOOLS DETECTION
-    ================================================= */
-
-    (function() {
-
-
-      let checkDevTools =
-        function() {
-
-
-          const threshold =
-            160;
-
-
-          if (
-
-            window.outerHeight -
-            window.innerHeight >
-            threshold
-
-            ||
-
-            window.outerWidth -
-            window.innerWidth >
-            threshold
-
-          ) {
-
-
-            document.body.innerHTML =
-              "";
-
-
-            alert(
-              "Developer Tools is disabled on this webpage."
-            );
-
-
-            window.close();
-
+        const countdown = setInterval(() => {
+          timeLeft--;
+          countdownText.textContent = timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(countdown);
+            intro.style.opacity = "0";
+            setTimeout(() => {
+              intro.style.display = "none";
+            }, 1000);
           }
+        }, 1000);
+      });
+    </script>
+    <!-- Disable Inspect / Right Click / DevTools -->
+<script>
+  // Disable Right Click
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
 
-        };
+  // Disable common inspect shortcuts
+  document.addEventListener('keydown', function(e) {
+    // F12
+    if (e.keyCode === 123) e.preventDefault();
 
+    // Ctrl+Shift+I
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) e.preventDefault();
 
-      setInterval(
-        checkDevTools,
-        1000
-      );
+    // Ctrl+Shift+C
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 67) e.preventDefault();
 
+    // Ctrl+U (View Source)
+    if (e.ctrlKey && e.keyCode === 85) e.preventDefault();
 
-    })();
+    // Ctrl+Shift+J (Console)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 74) e.preventDefault();
+  });
 
+  // Disable text selection & copy
+  document.addEventListener('selectstart', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
 
-  </script>
+  // 🔥 DevTools Detection (Strongest Protection)
+  (function() {
+    let checkDevTools = function() {
+      const threshold = 160;
 
+      if (
+        window.outerHeight - window.innerHeight > threshold ||
+        window.outerWidth - window.innerWidth > threshold
+      ) {
+        document.body.innerHTML = "";
+        alert("Developer Tools is disabled on this webpage.");
+        window.close();
+      }
+    };
+    setInterval(checkDevTools, 1000);
+  })();
+</script>
 
-</body>
-
+  </body>
 </html>
